@@ -289,7 +289,7 @@ export default function DashboardPage() {
               value={newTodo}
               onChange={(e) => setNewTodo(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addTodo()}
-              placeholder="Add a task ya galah..."
+              placeholder="Add a task ya cunt..."
               className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-[#f5f5f0] placeholder-[#666] focus:outline-none focus:border-[#c41e3a]"
             />
             <button

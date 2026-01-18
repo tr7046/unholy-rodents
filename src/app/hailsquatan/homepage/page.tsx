@@ -152,7 +152,7 @@ export default function HomepageAdminPage() {
 
           <p className="text-sm text-[#888888]">
             When enabled, displays the next gig from your shows list.
-            Book a bloody show in the Shows section ya galah.
+            Book a bloody show in the Shows section ya cunt.
           </p>
         </div>
 

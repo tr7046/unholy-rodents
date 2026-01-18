@@ -128,7 +128,7 @@ export default function MediaAdminPage() {
               className="hidden"
             />
             <PlusIcon className="w-5 h-5" />
-            {uploading ? 'Uploading...' : `Upload ${activeTab === 'photos' ? 'Some Pics' : 'Flyers'} Ya Galah`}
+            {uploading ? 'Uploading...' : `Upload ${activeTab === 'photos' ? 'Some Pics' : 'Flyers'} Ya Cunt`}
           </label>
         )}
       </div>

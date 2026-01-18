@@ -1,0 +1,295 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// SHOWS & VENUES
+// ============================================
+
+model Venue {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  city      String
+  state     String
+  country   String   @default("USA")
+  capacity  Int?
+  website   String?
+  lat       Float?
+  lng       Float?
+  createdAt DateTime @default(now())
+  shows     Show[]
+
+  @@map("venues")
+}
+
+model Show {
+  id             String     @id @default(cuid())
+  venueId        String
+  venue          Venue      @relation(fields: [venueId], references: [id])
+  date           DateTime
+  doorsTime      String?
+  startTime      String?
+  ticketUrl      String?
+  ticketPrice    Float?
+  ageRestriction String?
+  status         ShowStatus @default(confirmed)
+  notes          String?
+  bands          ShowBand[]
+  media          Media[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@map("shows")
+}
+
+enum ShowStatus {
+  confirmed
+  tentative
+  cancelled
+}
+
+model ShowBand {
+  id          String  @id @default(cuid())
+  showId      String
+  show        Show    @relation(fields: [showId], references: [id], onDelete: Cascade)
+  bandName    String
+  setOrder    Int
+  isHeadliner Boolean @default(false)
+
+  @@map("show_bands")
+}
+
+// ============================================
+// MUSIC & RELEASES
+// ============================================
+
+model Release {
+  id            String      @id @default(cuid())
+  title         String
+  type          ReleaseType
+  releaseDate   DateTime
+  coverArtUrl   String?
+  spotifyUrl    String?
+  bandcampUrl   String?
+  appleMusicUrl String?
+  youtubeUrl    String?
+  description   String?
+  tracks        Track[]
+  createdAt     DateTime    @default(now())
+
+  @@map("releases")
+}
+
+enum ReleaseType {
+  album
+  ep
+  single
+  demo
+  split
+}
+
+model Track {
+  id          String   @id @default(cuid())
+  releaseId   String
+  release     Release  @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  title       String
+  trackNumber Int
+  duration    Int? // seconds
+  lyrics      String?
+  spotifyId   String?
+  previewUrl  String?
+
+  @@map("tracks")
+}
+
+// ============================================
+// MEDIA
+// ============================================
+
+model Media {
+  id           String     @id @default(cuid())
+  type         MediaType
+  url          String
+  thumbnailUrl String?
+  title        String?
+  description  String?
+  credit       String?
+  showId       String?
+  show         Show?      @relation(fields: [showId], references: [id])
+  tags         MediaTag[]
+  createdAt    DateTime   @default(now())
+
+  @@map("media")
+}
+
+enum MediaType {
+  photo
+  video
+  flyer
+}
+
+model MediaTag {
+  id      String @id @default(cuid())
+  mediaId String
+  media   Media  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  tag     String
+
+  @@map("media_tags")
+}
+
+// ============================================
+// BAND MEMBERS
+// ============================================
+
+model Member {
+  id          String    @id @default(cuid())
+  name        String
+  role        String
+  bio         String?
+  photoUrl    String?
+  isActive    Boolean   @default(true)
+  joinedDate  DateTime?
+  gear        String?
+  socialLinks Json? // { instagram?, twitter?, website? }
+
+  @@map("members")
+}
+
+// ============================================
+// MERCH (Phase 2)
+// ============================================
+
+model Product {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  category    ProductCategory
+  images      String[]
+  isActive    Boolean          @default(true)
+  variants    ProductVariant[]
+  createdAt   DateTime         @default(now())
+
+  @@map("products")
+}
+
+enum ProductCategory {
+  shirt
+  hoodie
+  vinyl
+  cd
+  cassette
+  patch
+  poster
+  other
+}
+
+model ProductVariant {
+  id            String  @id @default(cuid())
+  productId     String
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size          String?
+  color         String?
+  sku           String  @unique
+  stock         Int     @default(0)
+  priceOverride Float?
+
+  @@map("product_variants")
+}
+
+// ============================================
+// SUBSCRIBERS & CONTACT
+// ============================================
+
+model Subscriber {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  name         String?
+  subscribedAt DateTime        @default(now())
+  source       SubscribeSource @default(website)
+  isActive     Boolean         @default(true)
+  preferences  Json            @default("{\"showAlerts\":true,\"newReleases\":true,\"merchDrops\":true,\"newsletter\":true}")
+
+  @@map("subscribers")
+}
+
+enum SubscribeSource {
+  website
+  show
+  merch
+  other
+}
+
+model ContactForm {
+  id        String            @id @default(cuid())
+  type      ContactType
+  name      String
+  email     String
+  subject   String?
+  message   String
+  status    ContactFormStatus @default(new_msg)
+  createdAt DateTime          @default(now())
+
+  @@map("contact_forms")
+}
+
+enum ContactType {
+  booking
+  press
+  general
+  merch
+}
+
+enum ContactFormStatus {
+  new_msg
+  read
+  replied
+  archived
+}
+
+// ============================================
+// PRESS KIT
+// ============================================
+
+model PressKitFile {
+  id          String       @id @default(cuid())
+  type        PressKitType
+  fileUrl     String
+  description String?
+  createdAt   DateTime     @default(now())
+
+  @@map("press_kit_files")
+}
+
+enum PressKitType {
+  bio
+  photo
+  logo
+  rider
+  epk
+}
+
+// ============================================
+// ADMIN
+// ============================================
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  role         AdminRole @default(editor)
+  createdAt    DateTime  @default(now())
+
+  @@map("admin_users")
+}
+
+enum AdminRole {
+  admin
+  editor
+}

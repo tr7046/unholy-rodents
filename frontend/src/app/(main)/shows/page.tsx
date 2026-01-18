@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Ticket, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, Clock, Ticket } from 'lucide-react';
 import {
   FadeUp,
   StaggerContainer,
@@ -200,16 +200,9 @@ export default function ShowsPage() {
                   <h3 className="text-2xl font-display text-paper mb-2">
                     NO SHOWS ANNOUNCED
                   </h3>
-                  <p className="text-concrete mb-6">
-                    Check back soon or sign up for our mailing list to get notified.
+                  <p className="text-concrete">
+                    Check back soon or follow us on social media for announcements.
                   </p>
-                  <motion.a
-                    href="/contact"
-                    className="text-blood hover:text-blood-bright inline-flex items-center gap-2 font-display uppercase tracking-wider text-sm"
-                    whileHover={{ x: 5 }}
-                  >
-                    Get notified <ArrowRight className="w-4 h-4" />
-                  </motion.a>
                 </div>
               </FadeUp>
             )}

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
-import { Calendar, Music, ArrowRight, Play, Volume2 } from 'lucide-react';
+import { Calendar, Music, Play, Volume2 } from 'lucide-react';
 import {
   FadeUp,
   SlideIn,
@@ -18,7 +18,7 @@ import {
   MagneticHover,
   Pulse,
 } from '@/components/animations';
-import { Visible, useIsVisible } from '@/contexts/VisibilityContext';
+import { Visible } from '@/contexts/VisibilityContext';
 
 export default function HomePage() {
   const heroRef = useRef(null);
@@ -197,22 +197,8 @@ export default function HomePage() {
                         Show dates coming soon
                       </h3>
                       <p className="text-concrete mb-4">
-                        Check back for upcoming shows or sign up for our mailing list to get notified.
+                        Check back soon or follow us on social media for announcements.
                       </p>
-                      <Visible path="elements.buttons.nextShowNotify">
-                        <Link
-                          href="/contact"
-                          className="text-blood hover:text-blood-bright inline-flex items-center gap-2 font-display uppercase tracking-wider text-sm transition-colors"
-                        >
-                          Get notified
-                          <motion.span
-                            animate={{ x: [0, 5, 0] }}
-                            transition={{ duration: 1, repeat: Infinity }}
-                          >
-                            <ArrowRight className="w-4 h-4" />
-                          </motion.span>
-                        </Link>
-                      </Visible>
                     </div>
                   </div>
                 </HoverCard>
@@ -279,7 +265,6 @@ export default function HomePage() {
                   </h3>
                   <p className="text-concrete mb-8 text-lg">
                     New music is in the works. Stay tuned for announcements about our upcoming releases.
-                    Subscribe to get notified when we drop.
                   </p>
 
                   <div className="flex flex-wrap gap-4">

@@ -4,10 +4,10 @@
       "home": true,
       "about": true,
       "contact": true,
-      "shows": true,
-      "music": true,
+      "shows": false,
+      "music": false,
       "media": true,
-      "store": true
+      "store": false
     },
     "navigation": {
       "header": {
@@ -80,14 +80,13 @@
     },
     "elements": {
       "buttons": {
-        "heroSeeShows": true,
-        "heroListenNow": true,
-        "nextShowNotify": true,
-        "releaseViewMore": true,
+        "heroSeeShows": false,
+        "heroListenNow": false,
+        "releaseViewMore": false,
         "aboutContactCta": true,
         "contactSendMessage": true,
         "showsBookingCta": true,
-        "musicStreamingButtons": true,
+        "musicStreamingButtons": false,
         "mediaInstagramLink": true,
         "mediaPressKit": true,
         "storeAddToCart": true,
@@ -104,5 +103,5 @@
       }
     }
   },
-  "updatedAt": "2026-01-18T19:44:10.212Z"
+  "updatedAt": "2026-01-18T21:08:09.546Z"
 }

@@ -108,7 +108,6 @@ export interface ElementsVisibility {
     // Home page
     heroSeeShows: boolean;
     heroListenNow: boolean;
-    nextShowNotify: boolean;
     releaseViewMore: boolean;
     // About page
     aboutContactCta: boolean;
@@ -226,7 +225,6 @@ export const defaultVisibilityConfig: VisibilityConfig = {
     buttons: {
       heroSeeShows: true,
       heroListenNow: true,
-      nextShowNotify: true,
       releaseViewMore: true,
       aboutContactCta: true,
       contactSendMessage: true,
@@ -356,7 +354,6 @@ export const visibilityLabels = {
       _title: 'Buttons & Links',
       heroSeeShows: { label: 'Hero - See Shows', description: 'Shows button in hero' },
       heroListenNow: { label: 'Hero - Listen Now', description: 'Music button in hero' },
-      nextShowNotify: { label: 'Get Notified', description: 'Show notification signup' },
       releaseViewMore: { label: 'View Release', description: 'Album details button' },
       aboutContactCta: { label: 'About - Contact Us', description: 'Contact button on about' },
       contactSendMessage: { label: 'Send Message', description: 'Form submit button' },

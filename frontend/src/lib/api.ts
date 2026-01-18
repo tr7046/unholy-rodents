@@ -79,14 +79,6 @@ export async function submitContact(data: ContactRequest) {
   });
 }
 
-// Subscribe
-export async function subscribe(data: SubscribeRequest) {
-  return fetchApi<void>('/subscribe', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-}
-
 // Types (simplified for client)
 export interface Venue {
   id: string;
@@ -155,9 +147,4 @@ export interface ContactRequest {
   email: string;
   subject?: string;
   message: string;
-}
-
-export interface SubscribeRequest {
-  email: string;
-  name?: string;
 }

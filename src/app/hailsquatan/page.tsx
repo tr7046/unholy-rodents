@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
               <LockClosedIcon className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-[#f5f5f0] mb-2">HAIL SQUATAN</h1>
-            <p className="text-[#888888] text-sm">Enter the Squnderworld</p>
+            <p className="text-[#888888] text-sm">Enter the Squnderworld ya sick cunt</p>
           </div>
 
           {/* Error message */}
@@ -101,7 +101,7 @@ export default function AdminLoginPage() {
               disabled={loading}
               className="w-full bg-[#c41e3a] hover:bg-[#a01830] text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Entering...' : 'ENTER THE SQUNDERWORLD'}
+              {loading ? 'Entering...' : 'GET IN HERE YA LEGEND'}
             </button>
           </form>
         </div>

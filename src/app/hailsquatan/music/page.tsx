@@ -73,7 +73,7 @@ export default function MusicAdminPage() {
   }
 
   async function handleDeleteRelease(id: string) {
-    if (!confirm('Delete this release?')) return;
+    if (!confirm('Delete this banger ya sure mate?')) return;
 
     await fetch(`/api/admin/music?id=${id}`, { method: 'DELETE' });
     await fetchData();
@@ -114,7 +114,7 @@ export default function MusicAdminPage() {
             className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
           >
             <PlusIcon className="w-5 h-5" />
-            Add Release
+            Drop a Banger
           </button>
         )}
       </div>
@@ -148,7 +148,7 @@ export default function MusicAdminPage() {
           {data.releases.length === 0 ? (
             <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-12 text-center">
               <MusicalNoteIcon className="w-12 h-12 text-[#666] mx-auto mb-4" />
-              <p className="text-[#888888]">No releases yet</p>
+              <p className="text-[#888888]">No releases yet ya slacker. Write some tunes!</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -339,7 +339,7 @@ function ReleaseModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#333]">
           <h2 className="text-xl font-bold text-[#f5f5f0]">
-            {isCreating ? 'Add Release' : 'Edit Release'}
+            {isCreating ? 'Drop a New Banger' : 'Fix Up This Ripper'}
           </h2>
           <button onClick={onClose} className="text-[#888888] hover:text-[#f5f5f0]">
             <XMarkIcon className="w-6 h-6" />

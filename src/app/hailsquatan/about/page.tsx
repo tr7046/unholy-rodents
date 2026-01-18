@@ -67,7 +67,7 @@ export default function AboutAdminPage() {
   }
 
   async function handleDeleteMember(memberId: string) {
-    if (!confirm('Delete this member?')) return;
+    if (!confirm('Kick this drongo out of the band?')) return;
 
     await fetch('/api/admin/about', {
       method: 'PUT',
@@ -109,7 +109,7 @@ export default function AboutAdminPage() {
             className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
           >
             <PlusIcon className="w-5 h-5" />
-            Add Member
+            Add a Mate
           </button>
         )}
       </div>
@@ -260,7 +260,7 @@ function MemberModal({
       <div className="bg-[#1a1a1a] border border-[#333] rounded-lg w-full max-w-lg">
         <div className="flex items-center justify-between p-6 border-b border-[#333]">
           <h2 className="text-xl font-bold text-[#f5f5f0]">
-            {isCreating ? 'Add Member' : 'Edit Member'}
+            {isCreating ? 'Add a New Mate' : 'Fix Up This Bloke'}
           </h2>
           <button onClick={onClose} className="text-[#888888] hover:text-[#f5f5f0]">
             <XMarkIcon className="w-6 h-6" />

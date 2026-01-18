@@ -151,7 +151,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[#f5f5f0]">Dashboard</h1>
-        <p className="text-[#888888] mt-1">Welcome to the Squnderworld</p>
+        <p className="text-[#888888] mt-1">G'day ya sick cunt, welcome to the Squnderworld</p>
       </div>
 
       {/* Stats Grid */}
@@ -241,8 +241,8 @@ export default function DashboardPage() {
               <div className="flex items-start gap-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                 <ExclamationTriangleIcon className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-[#f5f5f0] font-medium">Low Stock Warning</div>
-                  <div className="text-sm text-[#888888]">{stats?.products.lowStock} products have less than 5 units</div>
+                  <div className="text-[#f5f5f0] font-medium">Low Stock Warning, Ya Muppet</div>
+                  <div className="text-sm text-[#888888]">{stats?.products.lowStock} products have less than 5 units. Get off ya arse!</div>
                 </div>
               </div>
             )}
@@ -250,8 +250,8 @@ export default function DashboardPage() {
               <div className="flex items-start gap-3 bg-[#c41e3a]/10 border border-[#c41e3a]/30 rounded-lg p-4">
                 <ClipboardDocumentListIcon className="w-5 h-5 text-[#c41e3a] flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-[#f5f5f0] font-medium">Pending Orders</div>
-                  <div className="text-sm text-[#888888]">{stats?.orders.pending} orders need attention</div>
+                  <div className="text-[#f5f5f0] font-medium">Pending Orders, Ya Dropkick</div>
+                  <div className="text-sm text-[#888888]">{stats?.orders.pending} orders need attention. Ship 'em ya bludger!</div>
                 </div>
               </div>
             )}
@@ -259,8 +259,8 @@ export default function DashboardPage() {
               <div className="flex items-start gap-3 bg-[#252525] border border-[#333] rounded-lg p-4">
                 <TicketIcon className="w-5 h-5 text-[#888888] flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-[#f5f5f0] font-medium">No Upcoming Shows</div>
-                  <div className="text-sm text-[#888888]">Add your next gig to keep fans informed</div>
+                  <div className="text-[#f5f5f0] font-medium">No Upcoming Shows, Ya Flamin' Galah</div>
+                  <div className="text-sm text-[#888888]">Book a show ya fuck! The fans are waiting</div>
                 </div>
               </div>
             )}
@@ -270,8 +270,8 @@ export default function DashboardPage() {
               <div className="flex items-start gap-3 bg-green-500/10 border border-green-500/30 rounded-lg p-4">
                 <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-[#f5f5f0] font-medium">All Clear</div>
-                  <div className="text-sm text-[#888888]">No alerts at this time</div>
+                  <div className="text-[#f5f5f0] font-medium">All Good, Legend</div>
+                  <div className="text-sm text-[#888888]">No dramas at the moment, ya bloody beauty</div>
                 </div>
               </div>
             )}
@@ -289,7 +289,7 @@ export default function DashboardPage() {
               value={newTodo}
               onChange={(e) => setNewTodo(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addTodo()}
-              placeholder="Add a task..."
+              placeholder="Add a task ya galah..."
               className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-[#f5f5f0] placeholder-[#666] focus:outline-none focus:border-[#c41e3a]"
             />
             <button
@@ -303,7 +303,7 @@ export default function DashboardPage() {
           {/* Todo List */}
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {todos.length === 0 ? (
-              <div className="text-[#666] text-sm text-center py-4">No tasks yet</div>
+              <div className="text-[#666] text-sm text-center py-4">No tasks ya lazy drongo</div>
             ) : (
               todos.map((todo) => (
                 <div

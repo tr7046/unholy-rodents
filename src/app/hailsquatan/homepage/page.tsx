@@ -151,8 +151,8 @@ export default function HomepageAdminPage() {
           </div>
 
           <p className="text-sm text-[#888888]">
-            When enabled, displays the next upcoming show from your shows list.
-            Add shows in the Shows section.
+            When enabled, displays the next gig from your shows list.
+            Book a bloody show in the Shows section ya galah.
           </p>
         </div>
 
@@ -186,8 +186,8 @@ export default function HomepageAdminPage() {
           </div>
 
           <p className="text-sm text-[#888888] mt-4">
-            When enabled and you have releases, displays the latest release.
-            Add releases in the Music section.
+            When enabled and you have releases, displays the latest banger.
+            Drop some tunes in the Music section ya dropkick.
           </p>
         </div>
       </div>

@@ -87,7 +87,7 @@ export default function MediaAdminPage() {
   }
 
   async function handleDelete(id: string, type: MediaType) {
-    if (!confirm('Delete this item?')) return;
+    if (!confirm('Chuck this in the bin ya reckon?')) return;
 
     await fetch(`/api/admin/media?id=${id}&type=${type}`, { method: 'DELETE' });
     await fetchData();
@@ -116,7 +116,7 @@ export default function MediaAdminPage() {
             className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
           >
             <PlusIcon className="w-5 h-5" />
-            Add Video
+            Chuck Up a Video
           </button>
         ) : (
           <label className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg cursor-pointer transition-colors">
@@ -128,7 +128,7 @@ export default function MediaAdminPage() {
               className="hidden"
             />
             <PlusIcon className="w-5 h-5" />
-            {uploading ? 'Uploading...' : `Upload ${activeTab === 'photos' ? 'Photos' : 'Flyers'}`}
+            {uploading ? 'Uploading...' : `Upload ${activeTab === 'photos' ? 'Some Pics' : 'Flyers'} Ya Galah`}
           </label>
         )}
       </div>
@@ -154,7 +154,7 @@ export default function MediaAdminPage() {
       {items.length === 0 ? (
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-12 text-center">
           <Icon className="w-12 h-12 text-[#666] mx-auto mb-4" />
-          <p className="text-[#888888]">No {activeTab} yet</p>
+          <p className="text-[#888888]">No {activeTab} yet ya drongo. Get snappin!</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -239,7 +239,7 @@ function AddVideoModal({
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-[#1a1a1a] border border-[#333] rounded-lg w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-[#333]">
-          <h2 className="text-xl font-bold text-[#f5f5f0]">Add Video</h2>
+          <h2 className="text-xl font-bold text-[#f5f5f0]">Chuck Up a Video Ya Legend</h2>
           <button onClick={onClose} className="text-[#888888] hover:text-[#f5f5f0]">
             <XMarkIcon className="w-6 h-6" />
           </button>

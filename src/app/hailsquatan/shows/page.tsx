@@ -76,7 +76,7 @@ export default function ShowsAdminPage() {
   }
 
   async function handleDelete(id: string, type: 'upcoming' | 'past') {
-    if (!confirm('Delete this show?')) return;
+    if (!confirm('Delete this show ya drongo?')) return;
 
     await fetch(`/api/admin/shows?id=${id}&type=${type}`, { method: 'DELETE' });
     await fetchData();
@@ -116,7 +116,7 @@ export default function ShowsAdminPage() {
           className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
         >
           <PlusIcon className="w-5 h-5" />
-          Add Show
+          Book a Gig Cunt
         </button>
       </div>
 
@@ -148,7 +148,7 @@ export default function ShowsAdminPage() {
       {shows.length === 0 ? (
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-12 text-center">
           <CalendarIcon className="w-12 h-12 text-[#666] mx-auto mb-4" />
-          <p className="text-[#888888]">No {activeTab} shows</p>
+          <p className="text-[#888888]">No {activeTab} shows ya lazy bugger. Book a gig!</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -295,7 +295,7 @@ function ShowModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#333]">
           <h2 className="text-xl font-bold text-[#f5f5f0]">
-            {isCreating ? 'Add Show' : 'Edit Show'}
+            {isCreating ? 'Book a Show Ya Legend' : 'Edit This Gig'}
           </h2>
           <button onClick={onClose} className="text-[#888888] hover:text-[#f5f5f0]">
             <XMarkIcon className="w-6 h-6" />

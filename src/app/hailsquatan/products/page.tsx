@@ -87,7 +87,7 @@ export default function ProductsAdminPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this product?')) return;
+    if (!confirm('Chuck this product in the bin ya sure?')) return;
 
     await fetch(`/api/admin/products?id=${id}`, { method: 'DELETE' });
     await fetchData();
@@ -121,7 +121,7 @@ export default function ProductsAdminPage() {
           className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
         >
           <PlusIcon className="w-5 h-5" />
-          Add Product
+          Flog Some Merch
         </button>
       </div>
 
@@ -288,7 +288,7 @@ function ProductModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#333] sticky top-0 bg-[#1a1a1a]">
           <h2 className="text-xl font-bold text-[#f5f5f0]">
-            {isCreating ? 'Add Product' : 'Edit Product'}
+            {isCreating ? 'Add Some Merch Ya Legend' : 'Fix This Merch Up'}
           </h2>
           <button onClick={onClose} className="text-[#888888] hover:text-[#f5f5f0]">
             <XMarkIcon className="w-6 h-6" />

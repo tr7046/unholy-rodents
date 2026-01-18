@@ -127,7 +127,7 @@ export default function AdminLayout({
               className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-[#888888] hover:bg-[#252525] hover:text-[#f5f5f0] transition-colors"
             >
               <ArrowRightOnRectangleIcon className="w-5 h-5" />
-              <span className="font-medium">Logout</span>
+              <span className="font-medium">Piss Off</span>
             </button>
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function AdminLayout({
                 className="hidden lg:flex items-center gap-2 text-[#888888] hover:text-[#f5f5f0] px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors"
               >
                 <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                <span className="text-sm">Logout</span>
+                <span className="text-sm">Piss Off</span>
               </button>
             </div>
           </div>
@@ -210,7 +210,7 @@ export default function AdminLayout({
                 View Site
               </Link>
               <span>|</span>
-              <span>Hail Squatan</span>
+              <span>Hail Squatan Ya Legends</span>
             </div>
           </div>
         </footer>

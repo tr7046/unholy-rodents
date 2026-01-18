@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+const TEST_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const TEST_PASSWORD = process.env.ADMIN_PASSWORD || 'testpass';
+
 test.describe('Admin Panel (/hailsquatan)', () => {
   test('should show login page when not authenticated', async ({ page }) => {
     await page.goto('/hailsquatan');
@@ -24,8 +27,8 @@ test.describe('Admin Panel (/hailsquatan)', () => {
   test('should login with correct credentials', async ({ page }) => {
     await page.goto('/hailsquatan');
 
-    await page.getByLabel('Username').fill('squatan');
-    await page.getByLabel('Password').fill('REDACTED');
+    await page.getByLabel('Username').fill(TEST_USERNAME);
+    await page.getByLabel('Password').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: /enter the squnderworld/i }).click();
 
     // Should redirect to products page
@@ -36,8 +39,8 @@ test.describe('Admin Panel (/hailsquatan)', () => {
   test('should navigate between admin sections', async ({ page }) => {
     // Login first
     await page.goto('/hailsquatan');
-    await page.getByLabel('Username').fill('squatan');
-    await page.getByLabel('Password').fill('REDACTED');
+    await page.getByLabel('Username').fill(TEST_USERNAME);
+    await page.getByLabel('Password').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: /enter the squnderworld/i }).click();
     await expect(page).toHaveURL('/hailsquatan/products');
 
@@ -75,8 +78,8 @@ test.describe('Admin Panel (/hailsquatan)', () => {
   test('should display products from JSON data', async ({ page }) => {
     // Login first
     await page.goto('/hailsquatan');
-    await page.getByLabel('Username').fill('squatan');
-    await page.getByLabel('Password').fill('REDACTED');
+    await page.getByLabel('Username').fill(TEST_USERNAME);
+    await page.getByLabel('Password').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: /enter the squnderworld/i }).click();
 
     // Should see products table
@@ -89,8 +92,8 @@ test.describe('Admin Panel (/hailsquatan)', () => {
   test('should open product edit modal', async ({ page }) => {
     // Login first
     await page.goto('/hailsquatan');
-    await page.getByLabel('Username').fill('squatan');
-    await page.getByLabel('Password').fill('REDACTED');
+    await page.getByLabel('Username').fill(TEST_USERNAME);
+    await page.getByLabel('Password').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: /enter the squnderworld/i }).click();
 
     // Click edit on first product
@@ -103,8 +106,8 @@ test.describe('Admin Panel (/hailsquatan)', () => {
   test('should logout successfully', async ({ page }) => {
     // Login first
     await page.goto('/hailsquatan');
-    await page.getByLabel('Username').fill('squatan');
-    await page.getByLabel('Password').fill('REDACTED');
+    await page.getByLabel('Username').fill(TEST_USERNAME);
+    await page.getByLabel('Password').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: /enter the squnderworld/i }).click();
     await expect(page).toHaveURL('/hailsquatan/products');
 

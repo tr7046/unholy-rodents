@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 
-const ADMIN_USERNAME = 'squatan';
-const ADMIN_PASSWORD = 'REDACTED';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const SESSION_COOKIE = 'admin_session';
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 

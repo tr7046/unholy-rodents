@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
       });
 
       if (res.ok) {
-        router.push('/hailsquatan/products');
+        router.push('/hailsquatan/dashboard');
         router.refresh();
       } else {
         const data = await res.json();

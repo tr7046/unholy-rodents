@@ -14,9 +14,13 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
+  Squares2X2Icon,
+  ArrowTopRightOnSquareIcon,
+  BellIcon,
 } from '@heroicons/react/24/outline';
 
 const navigation = [
+  { name: 'Dashboard', href: '/hailsquatan/dashboard', icon: Squares2X2Icon },
   { name: 'Products', href: '/hailsquatan/products', icon: ShoppingBagIcon },
   { name: 'Shows', href: '/hailsquatan/shows', icon: TicketIcon },
   { name: 'Music', href: '/hailsquatan/music', icon: MusicalNoteIcon },
@@ -130,31 +134,86 @@ export default function AdminLayout({
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
-        {/* Mobile header */}
-        <header className="sticky top-0 z-30 bg-[#0a0a0a] border-b border-[#333] lg:hidden">
-          <div className="flex items-center justify-between px-4 py-4">
+      <div className="lg:pl-64 min-h-screen flex flex-col">
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-[#0a0a0a] border-b border-[#333]">
+          <div className="flex items-center justify-between px-4 py-4 lg:px-8">
+            {/* Mobile menu button */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="text-[#f5f5f0] p-2 -ml-2"
+              className="text-[#f5f5f0] p-2 -ml-2 lg:hidden"
             >
               <Bars3Icon className="w-6 h-6" />
             </button>
-            <h1 className="text-lg font-bold">
+
+            {/* Mobile title */}
+            <h1 className="text-lg font-bold lg:hidden">
               <span className="text-[#c41e3a]">UNHOLY</span>
               <span className="text-[#f5f5f0]"> ADMIN</span>
             </h1>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className={`text-[#f5f5f0] p-2 -mr-2 ${sidebarOpen ? '' : 'invisible'}`}
-            >
-              <XMarkIcon className="w-6 h-6" />
-            </button>
+
+            {/* Desktop: Current section */}
+            <div className="hidden lg:block">
+              <span className="text-[#888888] text-sm">
+                {navigation.find(n => n.href === pathname)?.name || 'Admin Panel'}
+              </span>
+            </div>
+
+            {/* Right side actions */}
+            <div className="flex items-center gap-2">
+              {/* View site link */}
+              <Link
+                href="/"
+                target="_blank"
+                className="hidden sm:flex items-center gap-2 text-[#888888] hover:text-[#f5f5f0] px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors"
+              >
+                <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                <span className="text-sm">View Site</span>
+              </Link>
+
+              {/* Notifications placeholder */}
+              <button className="relative p-2 text-[#888888] hover:text-[#f5f5f0] hover:bg-[#1a1a1a] rounded-lg transition-colors">
+                <BellIcon className="w-5 h-5" />
+              </button>
+
+              {/* Mobile close button */}
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className={`text-[#f5f5f0] p-2 -mr-2 lg:hidden ${sidebarOpen ? '' : 'invisible'}`}
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+
+              {/* Desktop logout */}
+              <button
+                onClick={handleLogout}
+                className="hidden lg:flex items-center gap-2 text-[#888888] hover:text-[#f5f5f0] px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors"
+              >
+                <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                <span className="text-sm">Logout</span>
+              </button>
+            </div>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-6 lg:p-8">{children}</main>
+
+        {/* Footer */}
+        <footer className="border-t border-[#333] px-6 py-4 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-[#666]">
+            <div>
+              <span className="text-[#c41e3a]">Unholy Rodents</span> Admin Panel
+            </div>
+            <div className="flex items-center gap-4">
+              <Link href="/" target="_blank" className="hover:text-[#f5f5f0] transition-colors">
+                View Site
+              </Link>
+              <span>|</span>
+              <span>Hail Squatan</span>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );

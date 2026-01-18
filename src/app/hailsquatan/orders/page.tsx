@@ -112,7 +112,7 @@ export default function OrdersAdminPage() {
       {data.orders.length === 0 ? (
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-12 text-center">
           <TruckIcon className="w-12 h-12 text-[#666] mx-auto mb-4" />
-          <p className="text-[#888888]">No orders yet ya drongos. Tell the fans to buy some merch!</p>
+          <p className="text-[#888888]">No orders yet ya cunts. Tell the fans to buy some merch!</p>
         </div>
       ) : (
         <div className="space-y-4">

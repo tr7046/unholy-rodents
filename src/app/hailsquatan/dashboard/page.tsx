@@ -303,7 +303,7 @@ export default function DashboardPage() {
           {/* Todo List */}
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {todos.length === 0 ? (
-              <div className="text-[#666] text-sm text-center py-4">No tasks ya lazy drongo</div>
+              <div className="text-[#666] text-sm text-center py-4">No tasks ya lazy cunt</div>
             ) : (
               todos.map((todo) => (
                 <div

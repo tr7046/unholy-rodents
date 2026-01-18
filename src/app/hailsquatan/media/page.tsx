@@ -154,7 +154,7 @@ export default function MediaAdminPage() {
       {items.length === 0 ? (
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-12 text-center">
           <Icon className="w-12 h-12 text-[#666] mx-auto mb-4" />
-          <p className="text-[#888888]">No {activeTab} yet ya drongo. Get snappin!</p>
+          <p className="text-[#888888]">No {activeTab} yet ya cunt. Get snappin!</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

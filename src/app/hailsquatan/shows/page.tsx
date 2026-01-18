@@ -76,7 +76,7 @@ export default function ShowsAdminPage() {
   }
 
   async function handleDelete(id: string, type: 'upcoming' | 'past') {
-    if (!confirm('Delete this show ya drongo?')) return;
+    if (!confirm('Delete this show ya cunt?')) return;
 
     await fetch(`/api/admin/shows?id=${id}&type=${type}`, { method: 'DELETE' });
     await fetchData();

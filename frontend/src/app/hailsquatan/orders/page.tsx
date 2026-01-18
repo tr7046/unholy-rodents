@@ -9,6 +9,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
+import { PageHeader } from '../components/QuickNav';
 
 interface OrderItem {
   productId: string;
@@ -100,13 +101,16 @@ export default function OrdersAdminPage() {
     return <div className="text-[#888888]">Loading...</div>;
   }
 
+  const pendingCount = data.orders.filter(o => o.status === 'pending').length;
+
   return (
     <div>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#f5f5f0]">Orders</h1>
-        <p className="text-[#888888] mt-1">{data.orders.length} orders</p>
-      </div>
+      <PageHeader
+        title="Orders"
+        subtitle={`${data.orders.length} orders${pendingCount > 0 ? ` (${pendingCount} pending)` : ''}`}
+        current="orders"
+        related={['products']}
+      />
 
       {/* Orders List */}
       {data.orders.length === 0 ? (

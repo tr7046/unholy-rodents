@@ -2,22 +2,32 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
+import { useVisibility, Visible } from '@/contexts/VisibilityContext';
 
-const navigation = [
-  { name: 'Shows', href: '/shows' },
-  { name: 'Music', href: '/music' },
-  { name: 'Store', href: '/store' },
-  { name: 'About', href: '/about' },
-  { name: 'Contact', href: '/contact' },
+const allNavigation = [
+  { name: 'Shows', href: '/shows', visibilityKey: 'shows' },
+  { name: 'Music', href: '/music', visibilityKey: 'music' },
+  { name: 'Store', href: '/store', visibilityKey: 'store' },
+  { name: 'About', href: '/about', visibilityKey: 'about' },
+  { name: 'Contact', href: '/contact', visibilityKey: 'contact' },
 ];
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const { isVisible } = useVisibility();
+
+  // Filter navigation based on visibility settings
+  const navigation = useMemo(() => {
+    return allNavigation.filter(item =>
+      isVisible(`navigation.header.links.${item.visibilityKey}`) &&
+      isVisible(`pages.${item.visibilityKey}`)
+    );
+  }, [isVisible]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,22 +52,24 @@ export function Header() {
         <nav className="container mx-auto px-4 py-4" aria-label="Main navigation">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="group relative" aria-label="Unholy Rodents - Home">
-              <motion.span
-                className="text-2xl font-display font-bold tracking-wider"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <span className="text-[#c41e3a] group-hover:text-[#e63946] transition-colors">UNHOLY</span>
-                <span className="text-[#f5f5f0]"> RODENTS</span>
-              </motion.span>
-              <motion.div
-                className="absolute -bottom-1 left-0 h-0.5 bg-[#c41e3a]"
-                initial={{ width: 0 }}
-                whileHover={{ width: '100%' }}
-                transition={{ duration: 0.3 }}
-              />
-            </Link>
+            <Visible path="navigation.header.logo">
+              <Link href="/" className="group relative" aria-label="Unholy Rodents - Home">
+                <motion.span
+                  className="text-2xl font-display font-bold tracking-wider"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <span className="text-[#c41e3a] group-hover:text-[#e63946] transition-colors">UNHOLY</span>
+                  <span className="text-[#f5f5f0]"> RODENTS</span>
+                </motion.span>
+                <motion.div
+                  className="absolute -bottom-1 left-0 h-0.5 bg-[#c41e3a]"
+                  initial={{ width: 0 }}
+                  whileHover={{ width: '100%' }}
+                  transition={{ duration: 0.3 }}
+                />
+              </Link>
+            </Visible>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8" role="menubar">
@@ -86,45 +98,47 @@ export function Header() {
             </div>
 
             {/* Mobile Menu Button */}
-            <button
-              type="button"
-              className="md:hidden text-[#f5f5f0] hover:text-[#c41e3a] transition-colors relative z-50"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-expanded={mobileMenuOpen}
-              aria-controls="mobile-menu"
-              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-            >
-              <AnimatePresence mode="wait">
-                {mobileMenuOpen ? (
-                  <motion.div
-                    key="close"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <X className="h-6 w-6" aria-hidden="true" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="menu"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Menu className="h-6 w-6" aria-hidden="true" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </button>
+            <Visible path="elements.features.mobileMenu">
+              <button
+                type="button"
+                className="md:hidden text-[#f5f5f0] hover:text-[#c41e3a] transition-colors relative z-50 cursor-pointer"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-menu"
+                aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              >
+                <AnimatePresence mode="wait">
+                  {mobileMenuOpen ? (
+                    <motion.div
+                      key="close"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <X className="h-6 w-6" aria-hidden="true" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="menu"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Menu className="h-6 w-6" aria-hidden="true" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </button>
+            </Visible>
           </div>
         </nav>
       </header>
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
-        {mobileMenuOpen && (
+        {mobileMenuOpen && isVisible('elements.features.mobileMenu') && (
           <motion.div
             id="mobile-menu"
             initial={{ opacity: 0 }}

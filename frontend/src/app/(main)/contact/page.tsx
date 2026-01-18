@@ -12,6 +12,7 @@ import {
   NoiseOverlay,
   MagneticHover,
 } from '@/components/animations';
+import { Visible } from '@/contexts/VisibilityContext';
 
 export default function ContactPage() {
   return (
@@ -62,165 +63,175 @@ export default function ContactPage() {
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Contact Info */}
-            <div>
-              <FadeUp>
-                <h2 className="text-paper mb-8">REACH OUT</h2>
-              </FadeUp>
+            <Visible path="sections.contact.info">
+              <div>
+                <FadeUp>
+                  <h2 className="text-paper mb-8">REACH OUT</h2>
+                </FadeUp>
 
-              <StaggerContainer className="space-y-6">
-                <StaggerItem>
-                  <HoverCard className="card card-border">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-blood flex items-center justify-center flex-shrink-0">
-                        <Mail className="w-6 h-6 text-paper" />
+                <StaggerContainer className="space-y-6">
+                  <StaggerItem>
+                    <HoverCard className="card card-border">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-blood flex items-center justify-center flex-shrink-0">
+                          <Mail className="w-6 h-6 text-paper" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-display text-paper mb-1">BOOKING / PRESS</h3>
+                          <p className="text-concrete text-sm mb-2">
+                            For show bookings, press inquiries, and business matters.
+                          </p>
+                          <a
+                            href="mailto:book@unholyrodents.com"
+                            className="text-blood hover:text-blood-bright transition-colors font-mono text-sm"
+                          >
+                            book@unholyrodents.com
+                          </a>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-lg font-display text-paper mb-1">BOOKING / PRESS</h3>
-                        <p className="text-concrete text-sm mb-2">
-                          For show bookings, press inquiries, and business matters.
-                        </p>
-                        <a
-                          href="mailto:book@unholyrodents.com"
-                          className="text-blood hover:text-blood-bright transition-colors font-mono text-sm"
-                        >
-                          book@unholyrodents.com
-                        </a>
+                    </HoverCard>
+                  </StaggerItem>
+
+                  <StaggerItem>
+                    <HoverCard className="card card-border">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-blood flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-6 h-6 text-paper" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-display text-paper mb-1">LOCATION</h3>
+                          <p className="text-concrete text-sm">
+                            Central Florida
+                            <br />
+                            <span className="text-blood">Squirrelcore territory</span>
+                          </p>
+                        </div>
+                      </div>
+                    </HoverCard>
+                  </StaggerItem>
+                </StaggerContainer>
+
+                {/* Social Links */}
+                <Visible path="sections.contact.socialLinks">
+                  <FadeUp delay={0.3}>
+                    <div className="mt-12">
+                      <h3 className="text-lg font-display text-paper mb-6">FOLLOW US</h3>
+                      <div className="flex gap-4">
+                        <MagneticHover>
+                          <motion.a
+                            href="https://instagram.com/unholyrodentsband"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-14 h-14 bg-void border-2 border-blood flex items-center justify-center text-blood hover:bg-blood hover:text-paper transition-colors"
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Instagram className="w-6 h-6" />
+                          </motion.a>
+                        </MagneticHover>
+                        <MagneticHover>
+                          <motion.a
+                            href="https://facebook.com/unholyrodents"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-14 h-14 bg-void border-2 border-blood flex items-center justify-center text-blood hover:bg-blood hover:text-paper transition-colors"
+                            whileHover={{ scale: 1.1, rotate: -5 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Facebook className="w-6 h-6" />
+                          </motion.a>
+                        </MagneticHover>
                       </div>
                     </div>
-                  </HoverCard>
-                </StaggerItem>
-
-                <StaggerItem>
-                  <HoverCard className="card card-border">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-blood flex items-center justify-center flex-shrink-0">
-                        <MapPin className="w-6 h-6 text-paper" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-display text-paper mb-1">LOCATION</h3>
-                        <p className="text-concrete text-sm">
-                          Central Florida
-                          <br />
-                          <span className="text-blood">Squirrelcore territory</span>
-                        </p>
-                      </div>
-                    </div>
-                  </HoverCard>
-                </StaggerItem>
-              </StaggerContainer>
-
-              {/* Social Links */}
-              <FadeUp delay={0.3}>
-                <div className="mt-12">
-                  <h3 className="text-lg font-display text-paper mb-6">FOLLOW US</h3>
-                  <div className="flex gap-4">
-                    <MagneticHover>
-                      <motion.a
-                        href="https://instagram.com/unholyrodentsband"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-14 h-14 bg-void border-2 border-blood flex items-center justify-center text-blood hover:bg-blood hover:text-paper transition-colors"
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Instagram className="w-6 h-6" />
-                      </motion.a>
-                    </MagneticHover>
-                    <MagneticHover>
-                      <motion.a
-                        href="https://facebook.com/unholyrodents"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-14 h-14 bg-void border-2 border-blood flex items-center justify-center text-blood hover:bg-blood hover:text-paper transition-colors"
-                        whileHover={{ scale: 1.1, rotate: -5 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Facebook className="w-6 h-6" />
-                      </motion.a>
-                    </MagneticHover>
-                  </div>
-                </div>
-              </FadeUp>
-            </div>
+                  </FadeUp>
+                </Visible>
+              </div>
+            </Visible>
 
             {/* Contact Form */}
-            <SlideIn direction="right">
-              <div className="card">
-                <h2 className="text-paper mb-6">SEND A MESSAGE</h2>
+            <Visible path="sections.contact.form">
+              <SlideIn direction="right">
+                <div className="card">
+                  <h2 className="text-paper mb-6">SEND A MESSAGE</h2>
 
-                <form className="space-y-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-display uppercase tracking-wider text-paper mb-2">
-                      Name
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      className="input"
-                      placeholder="Your name"
-                      required
-                    />
-                  </div>
+                  <form className="space-y-6">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-display uppercase tracking-wider text-paper mb-2">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        className="input"
+                        placeholder="Your name"
+                        required
+                      />
+                    </div>
 
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-display uppercase tracking-wider text-paper mb-2">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      className="input"
-                      placeholder="Email"
-                      required
-                    />
-                  </div>
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-display uppercase tracking-wider text-paper mb-2">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        className="input"
+                        placeholder="Email"
+                        required
+                      />
+                    </div>
 
-                  <div>
-                    <label htmlFor="subject" className="block text-sm font-display uppercase tracking-wider text-paper mb-2">
-                      Subject
-                    </label>
-                    <select
-                      id="subject"
-                      name="subject"
-                      className="input"
-                      required
-                    >
-                      <option value="">Select a subject</option>
-                      <option value="booking">Booking Inquiry</option>
-                      <option value="press">Press / Media</option>
-                      <option value="merch">Merch Question</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
+                    <Visible path="elements.features.contactFormSubject">
+                      <div>
+                        <label htmlFor="subject" className="block text-sm font-display uppercase tracking-wider text-paper mb-2">
+                          Subject
+                        </label>
+                        <select
+                          id="subject"
+                          name="subject"
+                          className="input"
+                          required
+                        >
+                          <option value="">Select a subject</option>
+                          <option value="booking">Booking Inquiry</option>
+                          <option value="press">Press / Media</option>
+                          <option value="merch">Merch Question</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                    </Visible>
 
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-display uppercase tracking-wider text-paper mb-2">
-                      Message
-                    </label>
-                    <textarea
-                      id="message"
-                      name="message"
-                      rows={5}
-                      className="input resize-none"
-                      placeholder="Your message..."
-                      required
-                    />
-                  </div>
+                    <div>
+                      <label htmlFor="message" className="block text-sm font-display uppercase tracking-wider text-paper mb-2">
+                        Message
+                      </label>
+                      <textarea
+                        id="message"
+                        name="message"
+                        rows={5}
+                        className="input resize-none"
+                        placeholder="Your message..."
+                        required
+                      />
+                    </div>
 
-                  <motion.button
-                    type="submit"
-                    className="btn btn-blood w-full"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Send className="w-5 h-5 mr-2" />
-                    Send Message
-                  </motion.button>
-                </form>
-              </div>
-            </SlideIn>
+                    <Visible path="elements.buttons.contactSendMessage">
+                      <motion.button
+                        type="submit"
+                        className="btn btn-blood w-full"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Send className="w-5 h-5 mr-2" />
+                        Send Message
+                      </motion.button>
+                    </Visible>
+                  </form>
+                </div>
+              </SlideIn>
+            </Visible>
           </div>
         </div>
       </section>

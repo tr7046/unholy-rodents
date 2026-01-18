@@ -8,6 +8,7 @@ import {
   XMarkIcon,
   MusicalNoteIcon,
 } from '@heroicons/react/24/outline';
+import { PageHeader } from '../components/QuickNav';
 
 interface Release {
   id: string;
@@ -98,25 +99,26 @@ export default function MusicAdminPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-[#f5f5f0]">Music</h1>
-          <p className="text-[#888888] mt-1">{data.releases.length} releases</p>
-        </div>
-        {activeTab === 'releases' && (
-          <button
-            onClick={() => {
-              setIsCreating(true);
-              setEditingRelease({ id: '', ...defaultRelease } as Release);
-            }}
-            className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            <PlusIcon className="w-5 h-5" />
-            Drop a Banger
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="Music"
+        subtitle={`${data.releases.length} releases`}
+        current="music"
+        related={['shows', 'media']}
+        action={
+          activeTab === 'releases' ? (
+            <button
+              onClick={() => {
+                setIsCreating(true);
+                setEditingRelease({ id: '', ...defaultRelease } as Release);
+              }}
+              className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <PlusIcon className="w-5 h-5" />
+              Drop a Banger
+            </button>
+          ) : undefined
+        }
+      />
 
       {/* Tabs */}
       <div className="flex gap-4 mb-6">

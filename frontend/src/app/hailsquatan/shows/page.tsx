@@ -9,6 +9,7 @@ import {
   CalendarIcon,
   MapPinIcon,
 } from '@heroicons/react/24/outline';
+import { PageHeader } from '../components/QuickNav';
 
 interface Show {
   id: string;
@@ -90,26 +91,25 @@ export default function ShowsAdminPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-[#f5f5f0]">Shows</h1>
-          <p className="text-[#888888] mt-1">
-            {data.upcomingShows.length} upcoming, {data.pastShows.length} past
-          </p>
-        </div>
-        <button
-          onClick={() => {
-            setIsCreating(true);
-            setEditingType(activeTab);
-            setEditingShow({ id: '', ...defaultShow } as Show);
-          }}
-          className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Book a Gig Cunt
-        </button>
-      </div>
+      <PageHeader
+        title="Shows"
+        subtitle={`${data.upcomingShows.length} upcoming, ${data.pastShows.length} past`}
+        current="shows"
+        related={['music', 'media']}
+        action={
+          <button
+            onClick={() => {
+              setIsCreating(true);
+              setEditingType(activeTab);
+              setEditingShow({ id: '', ...defaultShow } as Show);
+            }}
+            className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <PlusIcon className="w-5 h-5" />
+            Book a Gig Cunt
+          </button>
+        }
+      />
 
       {/* Tabs */}
       <div className="flex gap-4 mb-6">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { CheckIcon } from '@heroicons/react/24/outline';
+import { PageHeader } from '../components/QuickNav';
 
 interface HomepageData {
   hero: {
@@ -72,26 +73,30 @@ export default function HomepageAdminPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-[#f5f5f0]">Homepage</h1>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
-        >
-          {saved ? (
-            <>
-              <CheckIcon className="w-5 h-5" />
-              Saved
-            </>
-          ) : saving ? (
-            'Saving...'
-          ) : (
-            'Save Changes'
-          )}
-        </button>
-      </div>
+      <PageHeader
+        title="Homepage"
+        subtitle="Configure what appears on the main site"
+        current="homepage"
+        related={['shows', 'music']}
+        action={
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {saved ? (
+              <>
+                <CheckIcon className="w-5 h-5" />
+                Saved
+              </>
+            ) : saving ? (
+              'Saving...'
+            ) : (
+              'Save Changes'
+            )}
+          </button>
+        }
+      />
 
       <div className="space-y-8">
         {/* Hero Section */}

@@ -11,6 +11,7 @@ import {
   NoiseOverlay,
   MagneticHover,
 } from '@/components/animations';
+import { Visible } from '@/contexts/VisibilityContext';
 import {
   Product,
   ProductVariant,
@@ -119,18 +120,18 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-[#1a1a1a] max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-[#1a1a1a] max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-4 relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-[#888888] hover:text-[#f5f5f0] transition-colors"
+          className="absolute top-4 right-4 z-10 text-[#888888] hover:text-[#f5f5f0] transition-colors p-2"
         >
           <X className="w-6 h-6" />
         </button>
 
-        <div className="grid md:grid-cols-2 gap-6 p-6">
+        <div className="grid grid-cols-1 tablet:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6">
           {/* Product Image */}
           <div className="aspect-square bg-[#0a0a0a] flex items-center justify-center relative">
             {product.category === 'apparel' && <Shirt className="w-32 h-32 text-[#c41e3a]" />}
@@ -213,16 +214,18 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
             </div>
 
             {/* Add to Cart */}
-            <motion.button
-              onClick={handleAddToCart}
-              disabled={!selectedVariant || !isInStock(selectedVariant)}
-              className="btn btn-blood w-full disabled:opacity-50 disabled:cursor-not-allowed"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              {selectedVariant && isInStock(selectedVariant) ? 'Add to Cart' : 'Sold Out'}
-            </motion.button>
+            <Visible path="elements.buttons.storeAddToCart">
+              <motion.button
+                onClick={handleAddToCart}
+                disabled={!selectedVariant || !isInStock(selectedVariant)}
+                className="btn btn-blood w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <ShoppingCart className="w-5 h-5 mr-2" />
+                {selectedVariant && isInStock(selectedVariant) ? 'Add to Cart' : 'Sold Out'}
+              </motion.button>
+            </Visible>
           </div>
         </div>
       </motion.div>
@@ -505,68 +508,76 @@ export default function StoreClient({ products, shippingRates }: StoreClientProp
           {/* Filters & Cart */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-12">
             {/* Category filters */}
-            <div className="flex flex-wrap gap-2">
-              {(['all', 'apparel', 'accessories', 'bundles'] as const).map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setFilter(cat)}
-                  className={`px-4 py-2 font-display uppercase tracking-wider text-sm transition-colors ${
-                    filter === cat
-                      ? 'bg-[#c41e3a] text-[#f5f5f0]'
-                      : 'bg-[#0a0a0a] text-[#888888] hover:text-[#c41e3a]'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+            <Visible path="sections.store.filters">
+              <div className="flex flex-wrap gap-2">
+                {(['all', 'apparel', 'accessories', 'bundles'] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setFilter(cat)}
+                    className={`px-4 py-2 font-display uppercase tracking-wider text-sm transition-colors ${
+                      filter === cat
+                        ? 'bg-[#c41e3a] text-[#f5f5f0]'
+                        : 'bg-[#0a0a0a] text-[#888888] hover:text-[#c41e3a]'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </Visible>
 
             {/* Cart button */}
-            <MagneticHover>
-              <motion.button
-                onClick={() => setCartOpen(true)}
-                className="btn btn-outline relative"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <ShoppingCart className="w-5 h-5 mr-2" />
-                Cart
-                {getItemCount() > 0 && (
-                  <span className="absolute -top-2 -right-2 w-6 h-6 bg-[#c41e3a] text-[#f5f5f0] rounded-full flex items-center justify-center text-xs font-mono">
-                    {getItemCount()}
-                  </span>
-                )}
-              </motion.button>
-            </MagneticHover>
+            <Visible path="elements.buttons.storeViewCart">
+              <MagneticHover>
+                <motion.button
+                  onClick={() => setCartOpen(true)}
+                  className="btn btn-outline relative"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ShoppingCart className="w-5 h-5 mr-2" />
+                  Cart
+                  {getItemCount() > 0 && (
+                    <span className="absolute -top-2 -right-2 w-6 h-6 bg-[#c41e3a] text-[#f5f5f0] rounded-full flex items-center justify-center text-xs font-mono">
+                      {getItemCount()}
+                    </span>
+                  )}
+                </motion.button>
+              </MagneticHover>
+            </Visible>
           </div>
 
           {/* Product Grid */}
-          <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <StaggerItem key={product.id}>
-                <ProductCard product={product} onSelect={setSelectedProduct} />
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
+          <Visible path="sections.store.productGrid">
+            <StaggerContainer className="grid grid-cols-1 xs:grid-cols-2 tablet:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              {filteredProducts.map((product) => (
+                <StaggerItem key={product.id}>
+                  <ProductCard product={product} onSelect={setSelectedProduct} />
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
 
-          {filteredProducts.length === 0 && (
-            <div className="text-center py-12">
-              <Package className="w-16 h-16 text-[#888888] mx-auto mb-4" />
-              <p className="text-[#888888]">No products in this category yet.</p>
-            </div>
-          )}
+            {filteredProducts.length === 0 && (
+              <div className="text-center py-12">
+                <Package className="w-16 h-16 text-[#888888] mx-auto mb-4" />
+                <p className="text-[#888888]">No products in this category yet.</p>
+              </div>
+            )}
+          </Visible>
         </div>
       </section>
 
       {/* Free Shipping Banner */}
-      <section className="bg-[#c41e3a] py-4">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-[#f5f5f0] font-display uppercase tracking-wider">
-            <Truck className="w-5 h-5 inline mr-2" />
-            Free shipping on orders over {formatPrice(shippingRates.freeShippingThreshold)}
-          </p>
-        </div>
-      </section>
+      <Visible path="sections.store.freeShippingBanner">
+        <section className="bg-[#c41e3a] py-4">
+          <div className="container mx-auto px-4 text-center">
+            <p className="text-[#f5f5f0] font-display uppercase tracking-wider">
+              <Truck className="w-5 h-5 inline mr-2" />
+              Free shipping on orders over {formatPrice(shippingRates.freeShippingThreshold)}
+            </p>
+          </div>
+        </section>
+      </Visible>
 
       {/* Product Modal */}
       <AnimatePresence>

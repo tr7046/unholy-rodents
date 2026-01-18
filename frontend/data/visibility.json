@@ -1,0 +1,108 @@
+{
+  "config": {
+    "pages": {
+      "home": true,
+      "about": true,
+      "contact": true,
+      "shows": true,
+      "music": true,
+      "media": true,
+      "store": true
+    },
+    "navigation": {
+      "header": {
+        "logo": true,
+        "links": {
+          "shows": true,
+          "music": true,
+          "store": true,
+          "about": true,
+          "contact": true
+        }
+      },
+      "footer": {
+        "visible": true,
+        "brand": true,
+        "socialLinks": {
+          "instagram": true,
+          "facebook": true,
+          "youtube": true,
+          "spotify": true
+        },
+        "quickLinks": true,
+        "contact": true,
+        "copyright": true
+      }
+    },
+    "sections": {
+      "home": {
+        "hero": true,
+        "marquee": true,
+        "nextShow": true,
+        "latestRelease": true,
+        "socialFeed": true
+      },
+      "about": {
+        "bio": true,
+        "bandMembers": true,
+        "influences": true,
+        "philosophy": true,
+        "contactCta": true
+      },
+      "contact": {
+        "info": true,
+        "form": true,
+        "socialLinks": true
+      },
+      "shows": {
+        "upcoming": true,
+        "past": true,
+        "bookingCta": true
+      },
+      "music": {
+        "featuredRelease": true,
+        "discography": true,
+        "streamingLinks": true
+      },
+      "media": {
+        "socialLinks": true,
+        "photos": true,
+        "videos": true,
+        "flyers": true,
+        "pressKit": true
+      },
+      "store": {
+        "productGrid": true,
+        "filters": true,
+        "cart": true,
+        "freeShippingBanner": true
+      }
+    },
+    "elements": {
+      "buttons": {
+        "heroSeeShows": true,
+        "heroListenNow": true,
+        "nextShowNotify": true,
+        "releaseViewMore": true,
+        "aboutContactCta": true,
+        "contactSendMessage": true,
+        "showsBookingCta": true,
+        "musicStreamingButtons": true,
+        "mediaInstagramLink": true,
+        "mediaPressKit": true,
+        "storeAddToCart": true,
+        "storeViewCart": true
+      },
+      "features": {
+        "animations": true,
+        "marqueeScroll": true,
+        "hoverEffects": true,
+        "mobileMenu": true,
+        "cartSidebar": true,
+        "productModal": true,
+        "contactFormSubject": true
+      }
+    }
+  },
+  "updatedAt": "2026-01-18T19:44:10.212Z"
+}

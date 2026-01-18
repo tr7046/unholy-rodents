@@ -9,6 +9,7 @@ import {
   DocumentIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { PageHeader } from '../components/QuickNav';
 
 interface MediaItem {
   id: string;
@@ -102,36 +103,35 @@ export default function MediaAdminPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-[#f5f5f0]">Media</h1>
-          <p className="text-[#888888] mt-1">
-            {data.photos.length} photos, {data.videos.length} videos, {data.flyers.length} flyers
-          </p>
-        </div>
-        {activeTab === 'videos' ? (
-          <button
-            onClick={() => setShowAddVideo(true)}
-            className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            <PlusIcon className="w-5 h-5" />
-            Chuck Up a Video
-          </button>
-        ) : (
-          <label className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg cursor-pointer transition-colors">
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => handleUpload(e, activeTab)}
-              className="hidden"
-            />
-            <PlusIcon className="w-5 h-5" />
-            {uploading ? 'Uploading...' : `Upload ${activeTab === 'photos' ? 'Some Pics' : 'Flyers'} Ya Cunt`}
-          </label>
-        )}
-      </div>
+      <PageHeader
+        title="Media"
+        subtitle={`${data.photos.length} photos, ${data.videos.length} videos, ${data.flyers.length} flyers`}
+        current="media"
+        related={['products', 'shows', 'music']}
+        action={
+          activeTab === 'videos' ? (
+            <button
+              onClick={() => setShowAddVideo(true)}
+              className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <PlusIcon className="w-5 h-5" />
+              Chuck Up a Video
+            </button>
+          ) : (
+            <label className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg cursor-pointer transition-colors">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => handleUpload(e, activeTab)}
+                className="hidden"
+              />
+              <PlusIcon className="w-5 h-5" />
+              {uploading ? 'Uploading...' : `Upload ${activeTab === 'photos' ? 'Some Pics' : 'Flyers'} Ya Cunt`}
+            </label>
+          )
+        }
+      />
 
       {/* Tabs */}
       <div className="flex gap-4 mb-6">

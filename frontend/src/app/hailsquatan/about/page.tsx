@@ -8,6 +8,7 @@ import {
   XMarkIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
+import { PageHeader } from '../components/QuickNav';
 
 interface Member {
   id: string;
@@ -97,22 +98,26 @@ export default function AboutAdminPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-[#f5f5f0]">About</h1>
-        {activeTab === 'members' && (
-          <button
-            onClick={() => {
-              setIsCreatingMember(true);
-              setEditingMember({ id: '', ...defaultMember } as Member);
-            }}
-            className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            <PlusIcon className="w-5 h-5" />
-            Add a Mate
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="About"
+        subtitle={`${data.members.length} band members`}
+        current="about"
+        related={['media', 'music']}
+        action={
+          activeTab === 'members' ? (
+            <button
+              onClick={() => {
+                setIsCreatingMember(true);
+                setEditingMember({ id: '', ...defaultMember } as Member);
+              }}
+              className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <PlusIcon className="w-5 h-5" />
+              Add a Mate
+            </button>
+          ) : undefined
+        }
+      />
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 mb-6">

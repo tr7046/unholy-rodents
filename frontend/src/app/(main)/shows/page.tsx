@@ -11,6 +11,7 @@ import {
   NoiseOverlay,
   Pulse,
 } from '@/components/animations';
+import { Visible } from '@/contexts/VisibilityContext';
 
 interface ShowBand {
   bandName: string;
@@ -169,104 +170,112 @@ export default function ShowsPage() {
       <TornDivider color="charcoal" />
 
       {/* Upcoming Shows */}
-      <section className="section bg-charcoal">
-        <div className="container mx-auto px-4">
-          <FadeUp>
-            <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-paper">UPCOMING</h2>
-              <Calendar className="w-6 h-6 text-blood" />
-            </div>
-          </FadeUp>
-
-          {upcomingShows.length > 0 ? (
-            <StaggerContainer className="space-y-6">
-              {upcomingShows.map((show) => (
-                <StaggerItem key={show.id}>
-                  <ShowCard show={show} />
-                </StaggerItem>
-              ))}
-            </StaggerContainer>
-          ) : (
-            <FadeUp delay={0.1}>
-              <div className="card text-center py-12">
-                <motion.div
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Calendar className="w-16 h-16 text-blood mx-auto mb-4" />
-                </motion.div>
-                <h3 className="text-2xl font-display text-paper mb-2">
-                  NO SHOWS ANNOUNCED
-                </h3>
-                <p className="text-concrete mb-6">
-                  Check back soon or sign up for our mailing list to get notified.
-                </p>
-                <motion.a
-                  href="/contact"
-                  className="text-blood hover:text-blood-bright inline-flex items-center gap-2 font-display uppercase tracking-wider text-sm"
-                  whileHover={{ x: 5 }}
-                >
-                  Get notified <ArrowRight className="w-4 h-4" />
-                </motion.a>
+      <Visible path="sections.shows.upcoming">
+        <section className="section bg-charcoal">
+          <div className="container mx-auto px-4">
+            <FadeUp>
+              <div className="flex items-center gap-4 mb-8">
+                <h2 className="text-paper">UPCOMING</h2>
+                <Calendar className="w-6 h-6 text-blood" />
               </div>
             </FadeUp>
-          )}
-        </div>
-      </section>
+
+            {upcomingShows.length > 0 ? (
+              <StaggerContainer className="space-y-6">
+                {upcomingShows.map((show) => (
+                  <StaggerItem key={show.id}>
+                    <ShowCard show={show} />
+                  </StaggerItem>
+                ))}
+              </StaggerContainer>
+            ) : (
+              <FadeUp delay={0.1}>
+                <div className="card text-center py-12">
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Calendar className="w-16 h-16 text-blood mx-auto mb-4" />
+                  </motion.div>
+                  <h3 className="text-2xl font-display text-paper mb-2">
+                    NO SHOWS ANNOUNCED
+                  </h3>
+                  <p className="text-concrete mb-6">
+                    Check back soon or sign up for our mailing list to get notified.
+                  </p>
+                  <motion.a
+                    href="/contact"
+                    className="text-blood hover:text-blood-bright inline-flex items-center gap-2 font-display uppercase tracking-wider text-sm"
+                    whileHover={{ x: 5 }}
+                  >
+                    Get notified <ArrowRight className="w-4 h-4" />
+                  </motion.a>
+                </div>
+              </FadeUp>
+            )}
+          </div>
+        </section>
+      </Visible>
 
       <TornDivider color="void" />
 
       {/* Past Shows */}
-      {pastShows.length > 0 && (
-        <section className="section bg-void">
-          <div className="container mx-auto px-4">
-            <FadeUp>
-              <h2 className="text-paper mb-8">PAST SHOWS</h2>
-            </FadeUp>
+      <Visible path="sections.shows.past">
+        {pastShows.length > 0 && (
+          <section className="section bg-void">
+            <div className="container mx-auto px-4">
+              <FadeUp>
+                <h2 className="text-paper mb-8">PAST SHOWS</h2>
+              </FadeUp>
 
-            <StaggerContainer className="space-y-4">
-              {pastShows.map((show) => (
-                <StaggerItem key={show.id}>
-                  <ShowCard show={show} isPast />
-                </StaggerItem>
-              ))}
-            </StaggerContainer>
-          </div>
-        </section>
-      )}
+              <StaggerContainer className="space-y-4">
+                {pastShows.map((show) => (
+                  <StaggerItem key={show.id}>
+                    <ShowCard show={show} isPast />
+                  </StaggerItem>
+                ))}
+              </StaggerContainer>
+            </div>
+          </section>
+        )}
+      </Visible>
 
       {/* Booking CTA */}
-      <section className="section bg-blood relative overflow-hidden">
-        <motion.div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 40px)',
-          }}
-          animate={{ x: [0, -40] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-        />
+      <Visible path="sections.shows.bookingCta">
+        <section className="section bg-blood relative overflow-hidden">
+          <motion.div
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 40px)',
+            }}
+            animate={{ x: [0, -40] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+          />
 
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <FadeUp>
-            <h2 className="text-paper mb-4">BOOK US</h2>
-          </FadeUp>
-          <FadeUp delay={0.1}>
-            <p className="text-paper/80 mb-8 max-w-xl mx-auto">
-              Want Unholy Rodents to play your venue, festival, or event?
-            </p>
-          </FadeUp>
-          <FadeUp delay={0.2}>
-            <motion.a
-              href="/contact"
-              className="btn bg-void text-paper border-2 border-paper hover:bg-paper hover:text-blood transition-colors inline-flex"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Contact for Booking
-            </motion.a>
-          </FadeUp>
-        </div>
-      </section>
+          <div className="container mx-auto px-4 text-center relative z-10">
+            <FadeUp>
+              <h2 className="text-paper mb-4">BOOK US</h2>
+            </FadeUp>
+            <FadeUp delay={0.1}>
+              <p className="text-paper/80 mb-8 max-w-xl mx-auto">
+                Want Unholy Rodents to play your venue, festival, or event?
+              </p>
+            </FadeUp>
+            <FadeUp delay={0.2}>
+              <Visible path="elements.buttons.showsBookingCta">
+                <motion.a
+                  href="/contact"
+                  className="btn bg-void text-paper border-2 border-paper hover:bg-paper hover:text-blood transition-colors inline-flex"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Contact for Booking
+                </motion.a>
+              </Visible>
+            </FadeUp>
+          </div>
+        </section>
+      </Visible>
     </div>
   );
 }

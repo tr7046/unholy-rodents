@@ -1,13 +1,166 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Fonts - must be first */
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+@import "tailwindcss";
+
+/* ============================================
+   TAILWIND v4 THEME CONFIGURATION
+   ============================================ */
+
+@theme {
+  /* Breakpoints */
+  --breakpoint-xs: 320px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-tablet: 834px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* Colors */
+  --color-void: #0a0a0a;
+  --color-charcoal: #1a1a1a;
+  --color-ash: #2a2a2a;
+  --color-concrete: #888888;
+  --color-cream: #ebe8df;
+  --color-paper: #f5f5f0;
+  --color-blood: #c41e3a;
+  --color-blood-bright: #e63946;
+  --color-blood-dark: #8b0000;
+
+  /* Font families */
+  --font-display: 'Anton', Impact, 'Arial Black', sans-serif;
+  --font-body: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* Animations */
+  --animate-grain: grain 0.5s steps(10) infinite;
+  --animate-text-reveal: text-reveal 0.8s ease-out forwards;
+  --animate-text-glitch: text-glitch 0.3s ease-in-out;
+  --animate-letter-scramble: letter-scramble 0.1s steps(1) infinite;
+  --animate-fade-up: fade-up 0.6s ease-out forwards;
+  --animate-fade-down: fade-down 0.6s ease-out forwards;
+  --animate-slide-left: slide-left 0.6s ease-out forwards;
+  --animate-slide-right: slide-right 0.6s ease-out forwards;
+  --animate-scale-in: scale-in 0.4s ease-out forwards;
+  --animate-pulse-blood: pulse-blood 2s ease-in-out infinite;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-shake: shake 0.5s ease-in-out;
+  --animate-flicker: flicker 0.15s infinite;
+  --animate-line-draw: line-draw 0.6s ease-out forwards;
+  --animate-border-glow: border-glow 2s ease-in-out infinite;
+  --animate-torn-reveal: torn-reveal 1s ease-out forwards;
+  --animate-stamp: stamp 0.3s ease-out forwards;
+
+  /* Easing */
+  --ease-bounce-in: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Keyframes */
+  @keyframes grain {
+    0%, 100% { transform: translate(0, 0); }
+    10% { transform: translate(-1%, -1%); }
+    20% { transform: translate(1%, 1%); }
+    30% { transform: translate(-1%, 1%); }
+    40% { transform: translate(1%, -1%); }
+    50% { transform: translate(-1%, 0); }
+    60% { transform: translate(1%, 0); }
+    70% { transform: translate(0, 1%); }
+    80% { transform: translate(0, -1%); }
+    90% { transform: translate(1%, 1%); }
+  }
+
+  @keyframes text-reveal {
+    from { clip-path: inset(0 100% 0 0); }
+    to { clip-path: inset(0 0 0 0); }
+  }
+
+  @keyframes text-glitch {
+    0% { transform: translate(0); text-shadow: none; }
+    20% { transform: translate(-3px, 3px); text-shadow: 3px -3px 0 #c41e3a; }
+    40% { transform: translate(3px, -3px); text-shadow: -3px 3px 0 #c41e3a; }
+    60% { transform: translate(-3px, -3px); text-shadow: 3px 3px 0 #c41e3a; }
+    80% { transform: translate(3px, 3px); text-shadow: -3px -3px 0 #c41e3a; }
+    100% { transform: translate(0); text-shadow: none; }
+  }
+
+  @keyframes letter-scramble {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fade-down {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slide-left {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes slide-right {
+    from { opacity: 0; transform: translateX(-50px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes pulse-blood {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(196, 30, 58, 0.4); }
+    50% { box-shadow: 0 0 20px 10px rgba(196, 30, 58, 0.2); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  @keyframes line-draw {
+    from { width: 0%; }
+    to { width: 100%; }
+  }
+
+  @keyframes border-glow {
+    0%, 100% { border-color: rgba(196, 30, 58, 0.5); }
+    50% { border-color: rgba(196, 30, 58, 1); }
+  }
+
+  @keyframes torn-reveal {
+    from { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
+    to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  }
+
+  @keyframes stamp {
+    0% { transform: scale(2) rotate(-10deg); opacity: 0; }
+    50% { transform: scale(0.95) rotate(-2deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-1deg); opacity: 1; }
+  }
+}
 
 /* ============================================
    UNHOLY RODENTS - BRUTAL ZINE CROSSOVER
    ============================================ */
-
-/* Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
 /* ============================================
    BASE STYLES
@@ -492,4 +645,193 @@ p {
   .btn {
     @apply px-6 py-3 text-xs;
   }
+}
+
+/* ============================================
+   FOLDABLE PHONE SUPPORT
+   ============================================ */
+
+/* Samsung Galaxy Z Fold (unfolded inner display ~717px-884px) */
+/* Samsung Galaxy Z Flip (cover screen ~260px-300px, inner ~380px) */
+
+/* Detect foldable displays using viewport segments */
+@supports (env(viewport-segment-width 0 0)) {
+  /* When spanning across the fold */
+  .fold-aware-grid {
+    display: grid;
+    grid-template-columns: env(viewport-segment-width 0 0) env(viewport-segment-width 1 0);
+    gap: env(viewport-segment-left 1 0);
+  }
+}
+
+/* Detect horizontal viewport segments (folded horizontally) */
+@media (horizontal-viewport-segments: 2) {
+  .fold-aware-container {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .fold-aware-container > * {
+    flex-basis: calc(50% - 12px);
+  }
+}
+
+/* Detect vertical viewport segments (folded vertically like Z Flip) */
+@media (vertical-viewport-segments: 2) {
+  .section {
+    padding-top: env(viewport-segment-top 0 1, 4rem);
+    padding-bottom: env(viewport-segment-bottom 0 0, 4rem);
+  }
+}
+
+/* Medium-width displays (tablets in portrait, foldables unfolded) */
+@media (min-width: 600px) and (max-width: 900px) {
+  h1 {
+    @apply text-6xl;
+  }
+
+  h2 {
+    @apply text-4xl;
+  }
+
+  /* Better grid layouts for medium screens */
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ============================================
+   TABLET SUPPORT
+   ============================================ */
+
+/* iPad Mini, iPad Air portrait (~768px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .container {
+    max-width: 90%;
+  }
+
+  /* Better touch targets for tablets */
+  .btn {
+    min-height: 48px;
+    @apply px-6 py-3;
+  }
+
+  /* Tablet-specific nav adjustments */
+  .tablet-nav-spacing {
+    gap: 1.5rem;
+  }
+}
+
+/* iPad Pro and large tablets landscape (~1024px-1366px) */
+@media (min-width: 1024px) and (max-width: 1400px) {
+  .container {
+    max-width: 95%;
+  }
+
+  /* Optimal grid for large tablets */
+  .grid-responsive-lg {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ============================================
+   SAFE AREA INSETS (notches, rounded corners)
+   ============================================ */
+
+/* Support for devices with notches, foldables, rounded corners */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left, 0);
+  }
+
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right, 0);
+  }
+
+  .safe-area-all {
+    padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+  }
+
+  /* Fixed elements need safe area consideration */
+  .fixed-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+/* Bottom safe area utility for fixed navigation */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+}
+
+/* ============================================
+   DISPLAY CUTOUT / FOLD AVOIDANCE
+   ============================================ */
+
+/* Avoid placing critical content in fold area */
+@supports (padding: env(viewport-segment-left 1 0)) {
+  .avoid-fold {
+    padding-left: calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0));
+  }
+}
+
+/* ============================================
+   TOUCH-FRIENDLY ENHANCEMENTS
+   ============================================ */
+
+/* Ensure minimum touch target sizes on all mobile/tablet */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch devices */
+  button,
+  a,
+  [role="button"],
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Increase tap target for links in navigation */
+  nav a {
+    padding: 0.75rem 1rem;
+  }
+
+  /* Prevent accidental double-tap zoom */
+  button, a {
+    touch-action: manipulation;
+  }
+}
+
+/* ============================================
+   LANDSCAPE MOBILE / FOLDABLE LANDSCAPE
+   ============================================ */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Reduce vertical padding in landscape on short screens */
+  .section {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
+  h1 {
+    @apply text-4xl;
+  }
+
+  /* Horizontal scroll hints for carousels */
+  .scroll-hint::after {
+    content: '→';
+    animation: scroll-hint 1s ease-in-out infinite;
+  }
+}
+
+@keyframes scroll-hint {
+  0%, 100% { opacity: 0.5; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(5px); }
 }

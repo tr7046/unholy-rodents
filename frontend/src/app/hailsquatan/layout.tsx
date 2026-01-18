@@ -13,21 +13,31 @@ import {
   ClipboardDocumentListIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
-  XMarkIcon,
   Squares2X2Icon,
   ArrowTopRightOnSquareIcon,
-  BellIcon,
+  ChevronRightIcon,
+  EyeIcon,
 } from '@heroicons/react/24/outline';
 
 const navigation = [
+  { name: 'Dashboard', href: '/hailsquatan/dashboard', icon: Squares2X2Icon, shortName: 'Dash' },
+  { name: 'Products', href: '/hailsquatan/products', icon: ShoppingBagIcon, shortName: 'Merch' },
+  { name: 'Shows', href: '/hailsquatan/shows', icon: TicketIcon, shortName: 'Shows' },
+  { name: 'Music', href: '/hailsquatan/music', icon: MusicalNoteIcon, shortName: 'Music' },
+  { name: 'About', href: '/hailsquatan/about', icon: UserGroupIcon, shortName: 'About' },
+  { name: 'Media', href: '/hailsquatan/media', icon: PhotoIcon, shortName: 'Media' },
+  { name: 'Homepage', href: '/hailsquatan/homepage', icon: HomeIcon, shortName: 'Home' },
+  { name: 'Orders', href: '/hailsquatan/orders', icon: ClipboardDocumentListIcon, shortName: 'Orders' },
+  { name: 'Visibility', href: '/hailsquatan/visibility', icon: EyeIcon, shortName: 'Vis' },
+];
+
+// Quick access items for mobile bottom bar (most used)
+const mobileNavItems = [
   { name: 'Dashboard', href: '/hailsquatan/dashboard', icon: Squares2X2Icon },
   { name: 'Products', href: '/hailsquatan/products', icon: ShoppingBagIcon },
-  { name: 'Shows', href: '/hailsquatan/shows', icon: TicketIcon },
-  { name: 'Music', href: '/hailsquatan/music', icon: MusicalNoteIcon },
-  { name: 'About', href: '/hailsquatan/about', icon: UserGroupIcon },
-  { name: 'Media', href: '/hailsquatan/media', icon: PhotoIcon },
-  { name: 'Homepage', href: '/hailsquatan/homepage', icon: HomeIcon },
   { name: 'Orders', href: '/hailsquatan/orders', icon: ClipboardDocumentListIcon },
+  { name: 'Shows', href: '/hailsquatan/shows', icon: TicketIcon },
+  { name: 'More', href: '#more', icon: Bars3Icon },
 ];
 
 export default function AdminLayout({
@@ -73,17 +83,17 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Mobile sidebar backdrop */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {/* Mobile/tablet sidebar backdrop */}
+      <div
+        className={`fixed inset-0 bg-black/60 z-40 lg:hidden transition-opacity duration-300 ${
+          sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setSidebarOpen(false)}
+      />
 
-      {/* Sidebar */}
+      {/* Sidebar - visible on tablet+ */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-[#1a1a1a] border-r border-[#333] transform transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-[#1a1a1a] border-r border-[#333] transform transition-transform duration-300 ease-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -136,27 +146,37 @@ export default function AdminLayout({
       {/* Main content */}
       <div className="lg:pl-64 min-h-screen flex flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-[#0a0a0a] border-b border-[#333]">
-          <div className="flex items-center justify-between px-4 py-4 lg:px-8">
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="text-[#f5f5f0] p-2 -ml-2 lg:hidden"
-            >
-              <Bars3Icon className="w-6 h-6" />
-            </button>
+        <header className="sticky top-0 z-30 bg-[#0a0a0a] border-b border-[#333] safe-area-top">
+          <div className="flex items-center justify-between px-4 py-3 lg:px-6 lg:px-8">
+            {/* Mobile: Current section title */}
+            <div className="lg:hidden">
+              <h1 className="text-lg font-bold text-[#f5f5f0]">
+                {navigation.find(n => n.href === pathname)?.name || 'Admin'}
+              </h1>
+            </div>
 
-            {/* Mobile title */}
-            <h1 className="text-lg font-bold lg:hidden">
-              <span className="text-[#c41e3a]">UNHOLY</span>
-              <span className="text-[#f5f5f0]"> ADMIN</span>
-            </h1>
-
-            {/* Desktop: Current section */}
-            <div className="hidden lg:block">
-              <span className="text-[#888888] text-sm">
-                {navigation.find(n => n.href === pathname)?.name || 'Admin Panel'}
-              </span>
+            {/* Desktop/Tablet: Breadcrumb navigation */}
+            <div className="hidden lg:flex items-center gap-2 text-sm">
+              <Link
+                href="/hailsquatan/dashboard"
+                className="text-[#888888] hover:text-[#f5f5f0] transition-colors"
+              >
+                Admin
+              </Link>
+              {pathname !== '/hailsquatan' && pathname !== '/hailsquatan/dashboard' && (
+                <>
+                  <ChevronRightIcon className="w-4 h-4 text-[#666]" />
+                  <span className="text-[#f5f5f0] font-medium">
+                    {navigation.find(n => n.href === pathname)?.name || 'Page'}
+                  </span>
+                </>
+              )}
+              {pathname === '/hailsquatan/dashboard' && (
+                <>
+                  <ChevronRightIcon className="w-4 h-4 text-[#666]" />
+                  <span className="text-[#f5f5f0] font-medium">Dashboard</span>
+                </>
+              )}
             </div>
 
             {/* Right side actions */}
@@ -165,26 +185,13 @@ export default function AdminLayout({
               <Link
                 href="/"
                 target="_blank"
-                className="hidden sm:flex items-center gap-2 text-[#888888] hover:text-[#f5f5f0] px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors"
+                className="flex items-center gap-2 text-[#888888] hover:text-[#f5f5f0] px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors"
               >
                 <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                <span className="text-sm">View Site</span>
+                <span className="text-sm hidden xs:inline">View Site</span>
               </Link>
 
-              {/* Notifications placeholder */}
-              <button className="relative p-2 text-[#888888] hover:text-[#f5f5f0] hover:bg-[#1a1a1a] rounded-lg transition-colors">
-                <BellIcon className="w-5 h-5" />
-              </button>
-
-              {/* Mobile close button */}
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className={`text-[#f5f5f0] p-2 -mr-2 lg:hidden ${sidebarOpen ? '' : 'invisible'}`}
-              >
-                <XMarkIcon className="w-6 h-6" />
-              </button>
-
-              {/* Desktop logout */}
+              {/* Tablet/Desktop logout */}
               <button
                 onClick={handleLogout}
                 className="hidden lg:flex items-center gap-2 text-[#888888] hover:text-[#f5f5f0] px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors"
@@ -196,11 +203,11 @@ export default function AdminLayout({
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
+        {/* Page content - add padding bottom on mobile for bottom nav */}
+        <main className="flex-1 p-4 pb-24 lg:pb-6 lg:p-6 lg:p-8">{children}</main>
 
-        {/* Footer */}
-        <footer className="border-t border-[#333] px-6 py-4 lg:px-8">
+        {/* Tablet/Desktop Footer */}
+        <footer className="hidden lg:block border-t border-[#333] px-6 py-4 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-[#666]">
             <div>
               <span className="text-[#c41e3a]">Unholy Rodents</span> Admin Panel
@@ -214,6 +221,51 @@ export default function AdminLayout({
             </div>
           </div>
         </footer>
+
+        {/* Mobile Bottom Tab Bar - hidden on tablet+ where sidebar is visible */}
+        <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[#1a1a1a]/95 backdrop-blur-sm border-t border-[#333] pb-safe">
+          <div className="flex items-center justify-around px-2 py-1">
+            {mobileNavItems.map((item) => {
+              const isActive = item.href === '#more' ? sidebarOpen : pathname === item.href;
+              const isMore = item.href === '#more';
+
+              if (isMore) {
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    className="relative flex flex-col items-center justify-center py-2 px-4 rounded-xl transition-all"
+                  >
+                    <div className={`p-1.5 rounded-lg transition-colors ${isActive ? 'bg-[#c41e3a]/20' : ''}`}>
+                      <item.icon className={`w-6 h-6 transition-colors ${isActive ? 'text-[#c41e3a]' : 'text-[#888888]'}`} />
+                    </div>
+                    <span className={`text-[10px] mt-0.5 font-medium transition-colors ${isActive ? 'text-[#c41e3a]' : 'text-[#888888]'}`}>
+                      {item.name}
+                    </span>
+                  </button>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="relative flex flex-col items-center justify-center py-2 px-4 rounded-xl transition-all"
+                >
+                  <div className={`p-1.5 rounded-lg transition-colors ${isActive ? 'bg-[#c41e3a]/20' : ''}`}>
+                    <item.icon className={`w-6 h-6 transition-colors ${isActive ? 'text-[#c41e3a]' : 'text-[#888888]'}`} />
+                  </div>
+                  <span className={`text-[10px] mt-0.5 font-medium transition-colors ${isActive ? 'text-[#c41e3a]' : 'text-[#888888]'}`}>
+                    {item.name}
+                  </span>
+                  {isActive && (
+                    <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#c41e3a] rounded-full" />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
       </div>
     </div>
   );

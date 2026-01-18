@@ -8,6 +8,7 @@ import {
   XMarkIcon,
   PhotoIcon,
 } from '@heroicons/react/24/outline';
+import { PageHeader } from '../components/QuickNav';
 
 interface ProductVariant {
   id: string;
@@ -107,23 +108,24 @@ export default function ProductsAdminPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-[#f5f5f0]">Products</h1>
-          <p className="text-[#888888] mt-1">{data.products.length} products</p>
-        </div>
-        <button
-          onClick={() => {
-            setIsCreating(true);
-            setEditingProduct({ id: '', ...defaultProduct } as Product);
-          }}
-          className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Flog Some Merch
-        </button>
-      </div>
+      <PageHeader
+        title="Products"
+        subtitle={`${data.products.length} products`}
+        current="products"
+        related={['orders', 'media']}
+        action={
+          <button
+            onClick={() => {
+              setIsCreating(true);
+              setEditingProduct({ id: '', ...defaultProduct } as Product);
+            }}
+            className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <PlusIcon className="w-5 h-5" />
+            Flog Some Merch
+          </button>
+        }
+      />
 
       {/* Products List */}
       <div className="bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden">

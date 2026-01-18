@@ -3,7 +3,7 @@ import path from 'path';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 
-export type DataFile = 'products' | 'shows' | 'music' | 'about' | 'media' | 'homepage' | 'orders';
+export type DataFile = 'products' | 'shows' | 'music' | 'about' | 'media' | 'homepage' | 'orders' | 'visibility';
 
 export async function readData<T>(file: DataFile): Promise<T> {
   const filePath = path.join(DATA_DIR, `${file}.json`);

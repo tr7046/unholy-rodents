@@ -1,42 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { readData, writeData, generateId } from '@/lib/data';
+import { OrderSchema, OrderUpdateSchema, validateRequest } from '@/lib/schemas';
+import { z } from 'zod';
 
-interface OrderItem {
-  productId: string;
-  variantId: string;
-  productName: string;
-  variantName: string;
-  price: number;
-  quantity: number;
-}
-
-interface Order {
-  id: string;
-  items: OrderItem[];
-  customer: {
-    name: string;
-    email: string;
-    address: {
-      line1: string;
-      line2?: string;
-      city: string;
-      state: string;
-      zip: string;
-      country: string;
-    };
-  };
-  shipping: {
-    method: 'standard' | 'express';
-    cost: number;
-  };
-  subtotal: number;
-  total: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  trackingNumber?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+type Order = z.infer<typeof OrderSchema> & { id: string; createdAt: string; updatedAt: string };
 
 interface OrdersData {
   orders: Order[];
@@ -58,7 +26,14 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     // Orders can be created without admin auth (from checkout)
-    const order = await request.json();
+    const body = await request.json();
+    const validation = validateRequest(OrderSchema, body);
+
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const order = validation.data;
     const data = await readData<OrdersData>('orders');
 
     const newOrder: Order = {
@@ -84,7 +59,14 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, status, trackingNumber } = await request.json();
+    const body = await request.json();
+    const validation = validateRequest(OrderUpdateSchema, body);
+
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { id, status, trackingNumber } = validation.data;
     const data = await readData<OrdersData>('orders');
 
     const index = data.orders.findIndex((o) => o.id === id);
@@ -94,7 +76,7 @@ export async function PUT(request: NextRequest) {
 
     data.orders[index] = {
       ...data.orders[index],
-      status: status || data.orders[index].status,
+      status: status,
       trackingNumber: trackingNumber || data.orders[index].trackingNumber,
       updatedAt: new Date().toISOString(),
     };

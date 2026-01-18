@@ -1,26 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { readData, writeData, generateId } from '@/lib/data';
+import { ProductSchema, validateRequest } from '@/lib/schemas';
+import { z } from 'zod';
 
-interface ProductVariant {
-  id: string;
-  name: string;
-  price: number;
-  stock: number;
-  sku?: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  category: string;
-  images: string[];
-  featured: boolean;
-  tags: string[];
-  variants: ProductVariant[];
-}
+type Product = z.infer<typeof ProductSchema> & { id: string };
 
 interface ProductsData {
   products: Product[];
@@ -50,16 +34,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const product = await request.json();
+    const body = await request.json();
+    const validation = validateRequest(ProductSchema, body);
+
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const product = validation.data;
     const data = await readData<ProductsData>('products');
 
     const newProduct: Product = {
       ...product,
       id: generateId(),
-      variants: product.variants?.map((v: Omit<ProductVariant, 'id'>) => ({
+      variants: product.variants.map((v) => ({
         ...v,
-        id: generateId(),
-      })) || [],
+        id: v.id || generateId(),
+      })),
     };
 
     data.products.push(newProduct);
@@ -77,7 +68,14 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const product = await request.json();
+    const body = await request.json();
+    const validation = validateRequest(ProductSchema.extend({ id: z.string() }), body);
+
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const product = validation.data;
     const data = await readData<ProductsData>('products');
 
     const index = data.products.findIndex((p) => p.id === product.id);
@@ -85,7 +83,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    data.products[index] = product;
+    data.products[index] = product as Product;
     await writeData('products', data);
 
     return NextResponse.json(product);

@@ -151,7 +151,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[#f5f5f0]">Dashboard</h1>
-        <p className="text-[#888888] mt-1">G'day ya sick cunt, welcome to the Squnderworld</p>
+        <p className="text-[#888888] mt-1">G&apos;day ya sick cunt, welcome to the Squnderworld</p>
       </div>
 
       {/* Stats Grid */}
@@ -242,7 +242,7 @@ export default function DashboardPage() {
                 <ExclamationTriangleIcon className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <div className="text-[#f5f5f0] font-medium">Low Stock Warning, Ya Muppet</div>
-                  <div className="text-sm text-[#888888]">{stats?.products.lowStock} products have less than 5 units. Get off ya arse!</div>
+                  <div className="text-sm text-[#888888]">{stats?.products.lowStock} products have less than 5 units. Get off ya arse</div>
                 </div>
               </div>
             )}
@@ -251,7 +251,7 @@ export default function DashboardPage() {
                 <ClipboardDocumentListIcon className="w-5 h-5 text-[#c41e3a] flex-shrink-0 mt-0.5" />
                 <div>
                   <div className="text-[#f5f5f0] font-medium">Pending Orders, Ya Dropkick</div>
-                  <div className="text-sm text-[#888888]">{stats?.orders.pending} orders need attention. Ship 'em ya bludger!</div>
+                  <div className="text-sm text-[#888888]">{stats?.orders.pending} orders need attention. Ship em ya bludger</div>
                 </div>
               </div>
             )}
@@ -259,7 +259,7 @@ export default function DashboardPage() {
               <div className="flex items-start gap-3 bg-[#252525] border border-[#333] rounded-lg p-4">
                 <TicketIcon className="w-5 h-5 text-[#888888] flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-[#f5f5f0] font-medium">No Upcoming Shows, Ya Flamin' Galah</div>
+                  <div className="text-[#f5f5f0] font-medium">No Upcoming Shows, Ya Flamin Galah</div>
                   <div className="text-sm text-[#888888]">Book a show ya fuck! The fans are waiting</div>
                 </div>
               </div>

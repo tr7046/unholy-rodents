@@ -1,24 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { readData, writeData, generateId } from '@/lib/data';
+import { ShowSchema, validateRequest } from '@/lib/schemas';
+import { z } from 'zod';
 
-interface Show {
-  id: string;
-  date: string;
-  venue: {
-    name: string;
-    city: string;
-    state: string;
-  };
-  doorsTime?: string;
-  ticketUrl?: string | null;
-  bands?: { name: string; isHeadliner: boolean }[];
-}
+type Show = z.infer<typeof ShowSchema> & { id: string };
 
 interface ShowsData {
   upcomingShows: Show[];
   pastShows: Show[];
 }
+
+const ShowTypeSchema = z.enum(['upcoming', 'past']);
 
 export async function GET() {
   try {
@@ -39,15 +32,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { show, type } = await request.json();
+    const body = await request.json();
+    const showValidation = validateRequest(ShowSchema, body.show);
+    const typeValidation = validateRequest(ShowTypeSchema, body.type);
+
+    if (!showValidation.success) {
+      return NextResponse.json({ error: showValidation.error }, { status: 400 });
+    }
+    if (!typeValidation.success) {
+      return NextResponse.json({ error: 'Invalid show type ya cunt' }, { status: 400 });
+    }
+
     const data = await readData<ShowsData>('shows');
 
     const newShow: Show = {
-      ...show,
+      ...showValidation.data,
       id: generateId(),
     };
 
-    if (type === 'upcoming') {
+    if (typeValidation.data === 'upcoming') {
       data.upcomingShows.push(newShow);
     } else {
       data.pastShows.push(newShow);
@@ -66,17 +69,28 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { show, type } = await request.json();
+    const body = await request.json();
+    const showValidation = validateRequest(ShowSchema.extend({ id: z.string() }), body.show);
+    const typeValidation = validateRequest(ShowTypeSchema, body.type);
+
+    if (!showValidation.success) {
+      return NextResponse.json({ error: showValidation.error }, { status: 400 });
+    }
+    if (!typeValidation.success) {
+      return NextResponse.json({ error: 'Invalid show type ya cunt' }, { status: 400 });
+    }
+
+    const show = showValidation.data;
     const data = await readData<ShowsData>('shows');
 
-    const list = type === 'upcoming' ? data.upcomingShows : data.pastShows;
+    const list = typeValidation.data === 'upcoming' ? data.upcomingShows : data.pastShows;
     const index = list.findIndex((s) => s.id === show.id);
 
     if (index === -1) {
       return NextResponse.json({ error: 'Show not found' }, { status: 404 });
     }
 
-    list[index] = show;
+    list[index] = show as Show;
     await writeData('shows', data);
 
     return NextResponse.json(show);

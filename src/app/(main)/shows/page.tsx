@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock, Ticket, ArrowRight } from 'lucide-react';
 import {
   FadeUp,
-  SlideIn,
   StaggerContainer,
   StaggerItem,
   HoverCard,

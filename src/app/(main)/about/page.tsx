@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Users, Music, Zap, ArrowRight } from 'lucide-react';
 import {
   FadeUp,
-  SlideIn,
   StaggerContainer,
   StaggerItem,
   HoverCard,

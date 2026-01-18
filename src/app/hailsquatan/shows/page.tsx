@@ -82,15 +82,6 @@ export default function ShowsAdminPage() {
     await fetchData();
   }
 
-  function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  }
-
   if (!data) {
     return <div className="text-[#888888]">Loading...</div>;
   }

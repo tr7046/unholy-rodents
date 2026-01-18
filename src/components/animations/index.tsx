@@ -319,7 +319,7 @@ export function MagneticHover({ children, className = '' }: { children: ReactNod
 // HOVER CARD
 // ============================================
 
-export function HoverCard({ children, className = '' }: { children: ReactNode; className?: string }) {
+export function HoverCard({ children, className = '', onClick }: { children: ReactNode; className?: string; onClick?: () => void }) {
   return (
     <motion.div
       whileHover={{
@@ -328,6 +328,7 @@ export function HoverCard({ children, className = '' }: { children: ReactNode; c
       }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={className}
+      onClick={onClick}
     >
       {children}
     </motion.div>

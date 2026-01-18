@@ -211,6 +211,6 @@ export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): { suc
   if (result.success) {
     return { success: true, data: result.data };
   }
-  const errors = result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+  const errors = result.error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
   return { success: false, error: errors };
 }

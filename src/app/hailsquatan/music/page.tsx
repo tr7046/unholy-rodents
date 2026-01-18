@@ -7,7 +7,6 @@ import {
   TrashIcon,
   XMarkIcon,
   MusicalNoteIcon,
-  LinkIcon,
 } from '@heroicons/react/24/outline';
 
 interface Release {

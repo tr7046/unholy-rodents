@@ -6,7 +6,6 @@ import { useRef } from 'react';
 import { Calendar, Music, ArrowRight, Play, Volume2 } from 'lucide-react';
 import {
   FadeUp,
-  FadeIn,
   SlideIn,
   StaggerContainer,
   StaggerItem,
@@ -139,19 +138,19 @@ export default function HomePage() {
           <span className="text-paper font-display text-xl uppercase tracking-widest mx-8">
             HAIL SQUĀTAN
           </span>
-          <span className="text-paper/50 mx-4">///</span>
+          <span className="text-paper/50 mx-4">{'//'}/</span>
           <span className="text-paper font-display text-xl uppercase tracking-widest mx-8">
             FUCK ANIMAL CONTROL
           </span>
-          <span className="text-paper/50 mx-4">///</span>
+          <span className="text-paper/50 mx-4">{'//'}/</span>
           <span className="text-paper font-display text-xl uppercase tracking-widest mx-8">
             STAY NUTS
           </span>
-          <span className="text-paper/50 mx-4">///</span>
+          <span className="text-paper/50 mx-4">{'//'}/</span>
           <span className="text-paper font-display text-xl uppercase tracking-widest mx-8">
             SQUIRRELCORE
           </span>
-          <span className="text-paper/50 mx-4">///</span>
+          <span className="text-paper/50 mx-4">{'//'}/</span>
         </Marquee>
       </div>
 

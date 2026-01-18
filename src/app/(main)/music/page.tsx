@@ -5,9 +5,6 @@ import { Music, Play, ExternalLink } from 'lucide-react';
 import {
   FadeUp,
   SlideIn,
-  StaggerContainer,
-  StaggerItem,
-  HoverCard,
   TornDivider,
   NoiseOverlay,
   MagneticHover,

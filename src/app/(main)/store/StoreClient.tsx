@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Package, Shirt, Sticker, Gift, Plus, Minus, ShoppingCart, X, Truck } from 'lucide-react';
 import {
-  FadeUp,
-  SlideIn,
   StaggerContainer,
   StaggerItem,
   HoverCard,

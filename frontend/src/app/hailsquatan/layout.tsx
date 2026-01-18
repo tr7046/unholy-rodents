@@ -45,39 +45,21 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  async function checkAuth() {
-    try {
-      const res = await fetch('/api/admin/products');
-      setIsAuthenticated(res.ok);
-    } catch {
-      setIsAuthenticated(false);
-    }
-  }
+  // Login page doesn't need the admin chrome
+  const isLoginPage = pathname === '/hailsquatan';
 
   async function handleLogout() {
     await fetch('/api/admin/logout', { method: 'POST' });
-    setIsAuthenticated(false);
     router.push('/hailsquatan');
+    router.refresh();
   }
 
-  if (isAuthenticated === null) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="text-[#888888]">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
+  // Render login page without admin layout
+  if (isLoginPage) {
     return <>{children}</>;
   }
 
@@ -155,28 +137,14 @@ export default function AdminLayout({
               </h1>
             </div>
 
-            {/* Desktop/Tablet: Breadcrumb navigation */}
+            {/* Desktop/Tablet: Simple admin indicator (page titles shown in page content) */}
             <div className="hidden lg:flex items-center gap-2 text-sm">
               <Link
                 href="/hailsquatan/dashboard"
-                className="text-[#888888] hover:text-[#f5f5f0] transition-colors"
+                className="text-[#f5f5f0] hover:text-[#c41e3a] transition-colors font-medium"
               >
-                Admin
+                Admin Panel
               </Link>
-              {pathname !== '/hailsquatan' && pathname !== '/hailsquatan/dashboard' && (
-                <>
-                  <ChevronRightIcon className="w-4 h-4 text-[#666]" />
-                  <span className="text-[#f5f5f0] font-medium">
-                    {navigation.find(n => n.href === pathname)?.name || 'Page'}
-                  </span>
-                </>
-              )}
-              {pathname === '/hailsquatan/dashboard' && (
-                <>
-                  <ChevronRightIcon className="w-4 h-4 text-[#666]" />
-                  <span className="text-[#f5f5f0] font-medium">Dashboard</span>
-                </>
-              )}
             </div>
 
             {/* Right side actions */}

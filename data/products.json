@@ -1,0 +1,81 @@
+{
+  "products": [
+    {
+      "id": "hoodie-classic",
+      "name": "Unholy Rodents Classic Hoodie",
+      "slug": "classic-hoodie",
+      "description": "Heavy-weight black hoodie with the Unholy Rodents logo. Front print with \"Hail Squatan\" back print. 80% cotton, 20% polyester.",
+      "category": "apparel",
+      "images": ["/merch/hoodie-classic-front.jpg", "/merch/hoodie-classic-back.jpg"],
+      "featured": true,
+      "tags": ["hoodie", "apparel", "featured"],
+      "variants": [
+        { "id": "hoodie-classic-s", "name": "Small", "price": 4500, "stock": 10 },
+        { "id": "hoodie-classic-m", "name": "Medium", "price": 4500, "stock": 15 },
+        { "id": "hoodie-classic-l", "name": "Large", "price": 4500, "stock": 12 },
+        { "id": "hoodie-classic-xl", "name": "XL", "price": 4500, "stock": 8 },
+        { "id": "hoodie-classic-2xl", "name": "2XL", "price": 4800, "stock": 5 }
+      ]
+    },
+    {
+      "id": "tshirt-logo",
+      "name": "Squirrelcore Logo Tee",
+      "slug": "logo-tee",
+      "description": "Classic black tee with the Unholy Rodents logo. 100% cotton, pre-shrunk. Screen printed in the USA.",
+      "category": "apparel",
+      "images": ["/merch/tshirt-logo-front.jpg", "/merch/tshirt-logo-back.jpg"],
+      "featured": true,
+      "tags": ["tshirt", "apparel", "featured"],
+      "variants": [
+        { "id": "tshirt-logo-s", "name": "Small", "price": 2500, "stock": 20 },
+        { "id": "tshirt-logo-m", "name": "Medium", "price": 2500, "stock": 25 },
+        { "id": "tshirt-logo-l", "name": "Large", "price": 2500, "stock": 18 },
+        { "id": "tshirt-logo-xl", "name": "XL", "price": 2500, "stock": 15 },
+        { "id": "tshirt-logo-2xl", "name": "2XL", "price": 2700, "stock": 8 }
+      ]
+    },
+    {
+      "id": "sticker-pack",
+      "name": "Sticker Pack (5 stickers)",
+      "slug": "sticker-pack",
+      "description": "Pack of 5 die-cut vinyl stickers. Includes: Logo sticker, Squatan sticker, \"Fuck Animal Control\" sticker, squirrel skull, and secret design. Weather-resistant.",
+      "category": "accessories",
+      "images": ["/merch/sticker-pack.jpg"],
+      "featured": false,
+      "tags": ["stickers", "accessories"],
+      "variants": [
+        { "id": "sticker-pack-1", "name": "Pack of 5", "price": 800, "stock": 50 }
+      ]
+    },
+    {
+      "id": "bundle-starter",
+      "name": "Starter Bundle",
+      "slug": "starter-bundle",
+      "description": "Everything you need to join the horde. Includes: Classic Hoodie + Logo Tee + Sticker Pack. Save $10!",
+      "category": "bundles",
+      "images": ["/merch/bundle-starter.jpg"],
+      "featured": true,
+      "tags": ["bundle", "featured", "save"],
+      "variants": [
+        { "id": "bundle-starter-s", "name": "Small", "price": 6800, "stock": 5 },
+        { "id": "bundle-starter-m", "name": "Medium", "price": 6800, "stock": 8 },
+        { "id": "bundle-starter-l", "name": "Large", "price": 6800, "stock": 6 },
+        { "id": "bundle-starter-xl", "name": "XL", "price": 6800, "stock": 4 },
+        { "id": "bundle-starter-2xl", "name": "2XL", "price": 7300, "stock": 3 }
+      ]
+    }
+  ],
+  "shippingRates": {
+    "standard": {
+      "name": "Standard Shipping",
+      "price": 599,
+      "estimatedDays": "5-7 business days"
+    },
+    "express": {
+      "name": "Express Shipping",
+      "price": 1299,
+      "estimatedDays": "2-3 business days"
+    },
+    "freeShippingThreshold": 7500
+  }
+}

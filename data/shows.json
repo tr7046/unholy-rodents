@@ -1,0 +1,20 @@
+{
+  "upcomingShows": [],
+  "pastShows": [
+    {
+      "id": "show-1",
+      "date": "2024-01-15",
+      "venue": {
+        "name": "The Haven",
+        "city": "Orlando",
+        "state": "FL"
+      },
+      "doorsTime": "7:00 PM",
+      "ticketUrl": null,
+      "bands": [
+        { "name": "Unholy Rodents", "isHeadliner": true },
+        { "name": "Rat Bastards", "isHeadliner": false }
+      ]
+    }
+  ]
+}

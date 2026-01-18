@@ -1,0 +1,57 @@
+{
+  "members": [
+    {
+      "id": "member-1",
+      "name": "Squirrel Goddammit",
+      "role": "Vocals / Bass",
+      "bio": "The voice of the void. Screaming truths that the acorn-hoarding elite don't want you to hear.",
+      "image": ""
+    },
+    {
+      "id": "member-2",
+      "name": "Blind Squirrel",
+      "role": "Guitar",
+      "bio": "Even a blind squirrel finds a nut sometimes. This one found distortion and never looked back.",
+      "image": ""
+    },
+    {
+      "id": "member-3",
+      "name": "Anti-Squirrel",
+      "role": "Drums",
+      "bio": "The backbone of chaos. Hits drums like animal control hits our brothers and sisters.",
+      "image": ""
+    }
+  ],
+  "influences": [
+    "Slayer",
+    "Dead Kennedys",
+    "Municipal Waste",
+    "Discharge",
+    "Black Flag",
+    "D.R.I.",
+    "Suicidal Tendencies",
+    "Cro-Mags",
+    "Power Trip",
+    "Turnstile",
+    "Gulch"
+  ],
+  "philosophy": [
+    {
+      "title": "DIY OR DIE",
+      "description": "We book our own shows, print our own merch, and answer to no one but Squatan."
+    },
+    {
+      "title": "ALL AGES WELCOME",
+      "description": "The pit doesn't check IDs. If you can handle the chaos, you belong here."
+    },
+    {
+      "title": "LOUD & PROUD",
+      "description": "We're not turning down. Ever. Bring earplugs or bring regrets."
+    }
+  ],
+  "bio": [
+    "Born in the dumpsters behind a Central Florida Waffle House, Unholy Rodents emerged from the shadows in 2023 with one mission: to spread the gospel of Squatan through face-melting riffs and throat-shredding vocals.",
+    "What started as three squirrels tired of the corporate bird-feeder industrial complex has evolved into a full-blown movement. We're not just a band - we're a warning to anyone who thinks they can cage the wild.",
+    "Our sound? Imagine if Slayer got rabies and started a fight with Dead Kennedys in a pet store parking lot. That's us. Fast, loud, and absolutely unhinged."
+  ]
+}

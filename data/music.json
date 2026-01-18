@@ -1,0 +1,9 @@
+{
+  "releases": [],
+  "streamingPlatforms": [
+    { "name": "Spotify", "url": "", "color": "#1DB954" },
+    { "name": "Apple Music", "url": "", "color": "#FA243C" },
+    { "name": "Bandcamp", "url": "", "color": "#1DA0C3" },
+    { "name": "YouTube", "url": "", "color": "#FF0000" }
+  ]
+}

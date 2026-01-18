@@ -1,0 +1,16 @@
+{
+  "hero": {
+    "title": "UNHOLY RODENTS",
+    "tagline": ["SQUIRRELCORE FROM THE DEPTHS OF THE SQUNDERWORLD", "HAIL SQUATAN"],
+    "marqueeText": "HAIL SQUATAN /// FUCK ANIMAL CONTROL /// STAY NUTS /// SQUIRRELCORE"
+  },
+  "featuredShow": {
+    "enabled": true,
+    "showId": null
+  },
+  "featuredRelease": {
+    "enabled": true,
+    "releaseId": null,
+    "placeholderText": "New music brewing in the Squnderworld..."
+  }
+}

@@ -1,0 +1,495 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   UNHOLY RODENTS - BRUTAL ZINE CROSSOVER
+   ============================================ */
+
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #0a0a0a;
+  color: #f5f5f0;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Selection */
+::selection {
+  background-color: #c41e3a;
+  color: #f5f5f0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #c41e3a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #e63946;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Anton', Impact, 'Arial Black', sans-serif;
+  @apply uppercase tracking-wide;
+}
+
+h1 {
+  @apply text-6xl md:text-8xl lg:text-9xl leading-none;
+}
+
+h2 {
+  @apply text-4xl md:text-5xl lg:text-6xl;
+}
+
+h3 {
+  @apply text-2xl md:text-3xl;
+}
+
+p {
+  @apply leading-relaxed;
+}
+
+/* ============================================
+   NOISE OVERLAY
+   ============================================ */
+
+.noise-overlay {
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: url('/textures/noise.svg');
+  background-repeat: repeat;
+  animation: grain 0.5s steps(10) infinite;
+}
+
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-2%, -2%); }
+  20% { transform: translate(2%, 2%); }
+  30% { transform: translate(-2%, 2%); }
+  40% { transform: translate(2%, -2%); }
+  50% { transform: translate(-2%, 0); }
+  60% { transform: translate(2%, 0); }
+  70% { transform: translate(0, 2%); }
+  80% { transform: translate(0, -2%); }
+  90% { transform: translate(2%, 2%); }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .noise-overlay {
+    animation: none;
+  }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   TORN PAPER DIVIDER
+   ============================================ */
+
+.torn-divider {
+  @apply relative w-full h-12;
+  color: #0a0a0a;
+  margin-top: -1px;
+}
+
+.torn-divider-charcoal {
+  color: #1a1a1a;
+}
+
+.torn-divider svg {
+  @apply w-full h-full;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn {
+  @apply relative inline-flex items-center justify-center;
+  font-family: 'Anton', Impact, 'Arial Black', sans-serif;
+  @apply uppercase tracking-widest;
+  @apply px-8 py-4 text-sm;
+  @apply transition-all duration-200 ease-out;
+  @apply cursor-pointer;
+}
+
+.btn-blood {
+  background-color: #c41e3a;
+  color: #f5f5f0;
+  @apply hover:scale-[1.02];
+  @apply active:scale-[0.98];
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+}
+
+.btn-blood:hover {
+  background-color: #e63946;
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.4);
+}
+
+.btn-outline {
+  @apply bg-transparent border-2;
+  color: #f5f5f0;
+  border-color: #f5f5f0;
+  @apply active:scale-[0.98];
+}
+
+.btn-outline:hover {
+  background-color: #f5f5f0;
+  color: #0a0a0a;
+}
+
+.btn-ghost {
+  @apply bg-transparent relative overflow-hidden;
+  color: #f5f5f0;
+}
+
+.btn-ghost:hover {
+  color: #c41e3a;
+}
+
+.btn-ghost::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-0 h-0.5;
+  background-color: #c41e3a;
+  @apply transition-all duration-300 ease-out;
+}
+
+.btn-ghost:hover::after {
+  @apply w-full;
+}
+
+/* ============================================
+   LINKS
+   ============================================ */
+
+.link-underline {
+  @apply relative;
+  color: #f5f5f0;
+  @apply transition-colors duration-200;
+}
+
+.link-underline::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-0 h-0.5;
+  background-color: #c41e3a;
+  @apply transition-all duration-300 ease-out;
+}
+
+.link-underline:hover {
+  color: #c41e3a;
+}
+
+.link-underline:hover::after {
+  @apply w-full;
+}
+
+/* ============================================
+   TAGS / STAMPS
+   ============================================ */
+
+.tag {
+  @apply inline-block text-xs uppercase tracking-wider px-3 py-1;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  background-color: #c41e3a;
+  color: #f5f5f0;
+  transform: rotate(-1deg);
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+}
+
+.tag-outline {
+  @apply bg-transparent;
+  border: 1px solid #c41e3a;
+  color: #c41e3a;
+}
+
+.stamp {
+  @apply inline-block text-sm uppercase px-4 py-2;
+  font-family: 'Anton', Impact, 'Arial Black', sans-serif;
+  border: 2px solid #c41e3a;
+  color: #c41e3a;
+  transform: rotate(-2deg);
+  animation: stamp 0.3s ease-out forwards;
+}
+
+@keyframes stamp {
+  0% { transform: scale(2) rotate(-10deg); opacity: 0; }
+  50% { transform: scale(0.95) rotate(-2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-2deg); opacity: 1; }
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+
+.card {
+  @apply relative p-6;
+  background-color: #1a1a1a;
+  @apply transition-all duration-300 ease-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(196, 30, 58, 0.2);
+}
+
+.card-border {
+  border-left: 4px solid #c41e3a;
+}
+
+/* ============================================
+   INPUTS
+   ============================================ */
+
+.input {
+  @apply w-full px-4 py-3;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  background-color: #1a1a1a;
+  color: #f5f5f0;
+  border: 2px solid rgba(136, 136, 136, 0.3);
+  @apply transition-all duration-200;
+}
+
+.input:focus {
+  @apply outline-none;
+  border-color: #c41e3a;
+}
+
+.input::placeholder {
+  color: #888888;
+}
+
+/* ============================================
+   GLITCH TEXT EFFECT
+   ============================================ */
+
+.glitch {
+  @apply relative;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  @apply absolute top-0 left-0 w-full h-full;
+}
+
+.glitch::before {
+  color: #c41e3a;
+  animation: glitch-1 0.3s infinite linear alternate-reverse;
+  clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+}
+
+.glitch::after {
+  color: #ebe8df;
+  animation: glitch-2 0.3s infinite linear alternate-reverse;
+  clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+}
+
+@keyframes glitch-1 {
+  0% { transform: translate(0); }
+  20% { transform: translate(-3px, 3px); }
+  40% { transform: translate(3px, -3px); }
+  60% { transform: translate(-3px, -3px); }
+  80% { transform: translate(3px, 3px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes glitch-2 {
+  0% { transform: translate(0); }
+  20% { transform: translate(3px, -3px); }
+  40% { transform: translate(-3px, 3px); }
+  60% { transform: translate(3px, 3px); }
+  80% { transform: translate(-3px, -3px); }
+  100% { transform: translate(0); }
+}
+
+/* Pause glitch on hover for readability */
+.glitch:hover::before,
+.glitch:hover::after {
+  animation-play-state: paused;
+}
+
+/* ============================================
+   HALFTONE IMAGE TREATMENT
+   ============================================ */
+
+.halftone {
+  @apply relative overflow-hidden;
+  filter: contrast(1.2);
+}
+
+.halftone::after {
+  content: '';
+  @apply absolute inset-0;
+  background-image: radial-gradient(circle, #000 1px, transparent 1px);
+  background-size: 4px 4px;
+  mix-blend-mode: multiply;
+  opacity: 0.3;
+}
+
+/* ============================================
+   MARQUEE / TICKER
+   ============================================ */
+
+.marquee {
+  @apply overflow-hidden whitespace-nowrap;
+}
+
+.marquee-content {
+  @apply inline-block;
+  animation: marquee 20s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ============================================
+   SCROLL ANIMATIONS
+   ============================================ */
+
+.animate-on-scroll {
+  @apply opacity-0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animate-on-scroll.visible {
+  @apply opacity-100;
+  transform: translateY(0);
+}
+
+/* Stagger delays */
+.stagger-1 { transition-delay: 0.1s; }
+.stagger-2 { transition-delay: 0.2s; }
+.stagger-3 { transition-delay: 0.3s; }
+.stagger-4 { transition-delay: 0.4s; }
+.stagger-5 { transition-delay: 0.5s; }
+
+/* ============================================
+   SECTION STYLES
+   ============================================ */
+
+.section {
+  @apply relative py-16 md:py-24;
+}
+
+.section-charcoal {
+  background-color: #1a1a1a;
+}
+
+.section-blood {
+  background-color: #c41e3a;
+}
+
+.container-tight {
+  @apply max-w-4xl mx-auto px-4;
+}
+
+/* ============================================
+   SPECIAL EFFECTS
+   ============================================ */
+
+/* Blood drip effect */
+.blood-drip {
+  @apply relative;
+}
+
+.blood-drip::after {
+  content: '';
+  @apply absolute -bottom-4 left-1/4 w-2 h-8 rounded-b-full;
+  background-color: #c41e3a;
+  animation: drip 2s ease-in-out infinite;
+}
+
+@keyframes drip {
+  0%, 100% { height: 0; opacity: 0; }
+  50% { height: 32px; opacity: 1; }
+  100% { height: 48px; opacity: 0; }
+}
+
+/* Pulse ring */
+.pulse-ring {
+  @apply relative;
+}
+
+.pulse-ring::before {
+  content: '';
+  @apply absolute inset-0 rounded-full;
+  border: 2px solid #c41e3a;
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Shake on hover */
+.shake-hover:hover {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+
+@media (max-width: 768px) {
+  h1 {
+    @apply text-5xl;
+  }
+
+  h2 {
+    @apply text-3xl;
+  }
+
+  .btn {
+    @apply px-6 py-3 text-xs;
+  }
+}

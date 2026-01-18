@@ -130,22 +130,13 @@ export default function AdminLayout({
         {/* Header */}
         <header className="sticky top-0 z-30 bg-[#0a0a0a] border-b border-[#333] safe-area-top">
           <div className="flex items-center justify-between px-4 py-3 lg:px-6 lg:px-8">
-            {/* Mobile: Current section title */}
-            <div className="lg:hidden">
-              <h1 className="text-lg font-bold text-[#f5f5f0]">
-                {navigation.find(n => n.href === pathname)?.name || 'Admin'}
-              </h1>
-            </div>
-
-            {/* Desktop/Tablet: Simple admin indicator (page titles shown in page content) */}
-            <div className="hidden lg:flex items-center gap-2 text-sm">
-              <Link
-                href="/hailsquatan/dashboard"
-                className="text-[#f5f5f0] hover:text-[#c41e3a] transition-colors font-medium"
-              >
-                Admin Panel
-              </Link>
-            </div>
+            {/* Admin Panel link - visible on all sizes, page titles shown in page content */}
+            <Link
+              href="/hailsquatan/dashboard"
+              className="text-[#f5f5f0] hover:text-[#c41e3a] transition-colors font-medium text-sm"
+            >
+              <span className="text-[#c41e3a]">UNHOLY</span> ADMIN
+            </Link>
 
             {/* Right side actions */}
             <div className="flex items-center gap-2">

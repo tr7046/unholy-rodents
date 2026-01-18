@@ -102,10 +102,12 @@ function CollapsibleSection({
 
   return (
     <div className={`${bgColors[level]} border ${borderColors[level]} rounded-lg overflow-hidden`}>
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 hover:bg-[#252525] transition-colors"
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsOpen(!isOpen); }}
+        className="w-full flex items-center justify-between p-4 hover:bg-[#252525] transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-3">
           <span className="text-[#c41e3a]">{icon}</span>
@@ -137,7 +139,7 @@ function CollapsibleSection({
             <ChevronRightIcon className="w-5 h-5 text-[#666]" />
           )}
         </div>
-      </button>
+      </div>
       {isOpen && <div className="p-4 pt-0 space-y-1">{children}</div>}
     </div>
   );

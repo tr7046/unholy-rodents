@@ -150,7 +150,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#f5f5f0]">Dashboard</h1>
+        <h1 className="!text-2xl !leading-tight font-bold text-[#f5f5f0]">Dashboard</h1>
         <p className="text-[#888888] mt-1">G&apos;day ya sick cunt, welcome to the Squnderworld</p>
       </div>
 
@@ -235,7 +235,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Alerts */}
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-6">
-          <h2 className="text-lg font-bold text-[#f5f5f0] mb-4">Alerts</h2>
+          <h2 className="!text-lg font-bold text-[#f5f5f0] mb-4">Alerts</h2>
           <div className="space-y-3">
             {(stats?.products.lowStock || 0) > 0 && (
               <div className="flex items-start gap-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
@@ -280,7 +280,7 @@ export default function DashboardPage() {
 
         {/* Admin Todos */}
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-6">
-          <h2 className="text-lg font-bold text-[#f5f5f0] mb-4">Admin Tasks</h2>
+          <h2 className="!text-lg font-bold text-[#f5f5f0] mb-4">Admin Tasks</h2>
 
           {/* Add Todo */}
           <div className="flex gap-2 mb-4">
@@ -346,7 +346,7 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-6">
-        <h2 className="text-lg font-bold text-[#f5f5f0] mb-4">Quick Actions</h2>
+        <h2 className="!text-lg font-bold text-[#f5f5f0] mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link
             href="/hailsquatan/products"

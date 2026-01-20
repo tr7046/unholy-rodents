@@ -83,10 +83,10 @@ export default function AdminLayout({
           {/* Logo */}
           <div className="p-6 border-b border-[#333]">
             <Link href="/hailsquatan" className="block">
-              <h1 className="text-xl font-bold">
+              <span className="!text-xl font-bold block">
                 <span className="text-[#c41e3a]">UNHOLY</span>
                 <span className="text-[#f5f5f0]"> ADMIN</span>
-              </h1>
+              </span>
             </Link>
           </div>
 

@@ -4,9 +4,9 @@ import { prisma } from '../../db';
 const router = Router();
 
 // GET /api/v1/admin/content/:key - Get content by key
-router.get('/:key', async (req: Request, res: Response) => {
+router.get('/:key', async (req: Request<{ key: string }>, res: Response) => {
   try {
-    const { key } = req.params;
+    const key = req.params.key;
 
     const content = await prisma.siteContent.findUnique({
       where: { key },
@@ -25,9 +25,9 @@ router.get('/:key', async (req: Request, res: Response) => {
 });
 
 // PUT /api/v1/admin/content/:key - Update or create content
-router.put('/:key', async (req: Request, res: Response) => {
+router.put('/:key', async (req: Request<{ key: string }>, res: Response) => {
   try {
-    const { key } = req.params;
+    const key = req.params.key;
     const { value } = req.body;
 
     if (value === undefined) {
@@ -48,9 +48,9 @@ router.put('/:key', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/v1/admin/content/:key - Partial update (merge with existing)
-router.patch('/:key', async (req: Request, res: Response) => {
+router.patch('/:key', async (req: Request<{ key: string }>, res: Response) => {
   try {
-    const { key } = req.params;
+    const key = req.params.key;
     const updates = req.body;
 
     // Get existing content

@@ -4,9 +4,9 @@ import { prisma } from '../db';
 const router = Router();
 
 // GET /api/v1/content/:key - Get public content by key
-router.get('/:key', async (req: Request, res: Response) => {
+router.get('/:key', async (req: Request<{ key: string }>, res: Response) => {
   try {
-    const { key } = req.params;
+    const key = req.params.key;
 
     const content = await prisma.siteContent.findUnique({
       where: { key },

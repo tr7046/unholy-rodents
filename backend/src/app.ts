@@ -19,13 +19,14 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate limiting
+// Rate limiting (disabled validation for Railway proxy)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   message: { success: false, error: 'Too many requests, slow down.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false, // Disable validation to work behind Railway proxy
 });
 app.use('/api', limiter);
 

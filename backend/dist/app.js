@@ -10,8 +10,8 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const path_1 = __importDefault(require("path"));
 const routes_1 = __importDefault(require("./routes"));
 const app = (0, express_1.default)();
-// Trust proxy for Railway/Vercel deployments
-app.set('trust proxy', 1);
+// Trust proxy for Railway/Vercel deployments (required for rate limiting behind proxy)
+app.set('trust proxy', true);
 // Security middleware
 app.use((0, helmet_1.default)({
     crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow images to be loaded from other origins
@@ -20,13 +20,14 @@ app.use((0, cors_1.default)({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
 }));
-// Rate limiting
+// Rate limiting (disabled validation for Railway proxy)
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // limit each IP to 100 requests per windowMs
     message: { success: false, error: 'Too many requests, slow down.' },
     standardHeaders: true,
     legacyHeaders: false,
+    validate: false, // Disable validation to work behind Railway proxy
 });
 app.use('/api', limiter);
 // Serve static files from uploads directory

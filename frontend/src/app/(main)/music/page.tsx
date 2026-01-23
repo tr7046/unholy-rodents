@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Music, Play, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import {
   FadeUp,
   SlideIn,
@@ -11,14 +12,45 @@ import {
 } from '@/components/animations';
 import { Visible } from '@/contexts/VisibilityContext';
 
-const streamingPlatforms = [
-  { name: 'Spotify', href: '#', color: 'bg-[#1DB954]' },
-  { name: 'Apple Music', href: '#', color: 'bg-[#FA243C]' },
-  { name: 'Bandcamp', href: '#', color: 'bg-[#1DA0C3]' },
-  { name: 'YouTube', href: '#', color: 'bg-[#FF0000]' },
-];
+interface Release {
+  id: string;
+  title: string;
+  type: 'album' | 'ep' | 'single';
+  releaseDate: string;
+  coverArt: string;
+  tracks: { title: string; duration: string }[];
+  streamingLinks: { platform: string; url: string }[];
+}
+
+interface MusicData {
+  releases: Release[];
+  streamingPlatforms: { name: string; url: string; color: string }[];
+}
 
 export default function MusicPage() {
+  const [data, setData] = useState<MusicData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/public/music')
+      .then(res => res.json())
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="relative pt-20 min-h-screen bg-void flex items-center justify-center">
+        <div className="text-concrete">Loading...</div>
+      </div>
+    );
+  }
+
+  const streamingPlatforms = data?.streamingPlatforms || [];
+  const releases = data?.releases || [];
+  const latestRelease = releases[0];
+
   return (
     <div className="relative pt-20">
       <NoiseOverlay />
@@ -78,9 +110,13 @@ export default function MusicPage() {
                     whileHover={{ scale: 1.02 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <div className="halftone absolute inset-0 flex items-center justify-center">
-                      <Music className="w-32 h-32 text-blood" />
-                    </div>
+                    {latestRelease?.coverArt ? (
+                      <img src={latestRelease.coverArt} alt={latestRelease.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="halftone absolute inset-0 flex items-center justify-center">
+                        <Music className="w-32 h-32 text-blood" />
+                      </div>
+                    )}
 
                     {/* Hover play overlay */}
                     <motion.div
@@ -105,14 +141,15 @@ export default function MusicPage() {
                     animate={{ rotate: [-2, 2, -2] }}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
-                    Coming Soon
+                    {latestRelease ? latestRelease.type.toUpperCase() : 'Coming Soon'}
                   </motion.span>
                   <h3 className="text-4xl md:text-5xl font-display text-paper mb-4">
-                    NEW MUSIC
+                    {latestRelease?.title || 'NEW MUSIC'}
                   </h3>
                   <p className="text-concrete mb-8 text-lg">
-                    We&apos;re cooking up something unholy in the studio. New riffs, new chaos, same squirrelcore energy.
-                    Stay tuned for announcements.
+                    {latestRelease
+                      ? `${latestRelease.tracks.length} tracks of pure squirrelcore chaos.`
+                      : "We're cooking up something unholy in the studio. New riffs, new chaos, same squirrelcore energy. Stay tuned for announcements."}
                   </p>
 
                   {/* Streaming platforms */}
@@ -122,8 +159,11 @@ export default function MusicPage() {
                         {streamingPlatforms.map((platform) => (
                           <MagneticHover key={platform.name}>
                             <motion.a
-                              href={platform.href}
-                              className={`${platform.color} px-6 py-3 text-paper font-display uppercase tracking-wider text-sm inline-flex items-center gap-2`}
+                              href={platform.url || '#'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-6 py-3 text-paper font-display uppercase tracking-wider text-sm inline-flex items-center gap-2"
+                              style={{ backgroundColor: platform.color }}
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
@@ -144,7 +184,7 @@ export default function MusicPage() {
 
       <TornDivider color="void" />
 
-      {/* Discography placeholder */}
+      {/* Discography */}
       <Visible path="sections.music.discography">
         <section className="section bg-void">
           <div className="container mx-auto px-4">
@@ -152,40 +192,60 @@ export default function MusicPage() {
               <h2 className="text-paper mb-8">DISCOGRAPHY</h2>
             </FadeUp>
 
-            <FadeUp delay={0.1}>
-              <div className="card text-center py-16">
-                <motion.div
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                >
-                  <Music className="w-20 h-20 text-blood mx-auto mb-6" />
-                </motion.div>
-                <h3 className="text-2xl font-display text-paper mb-4">
-                  RELEASES COMING SOON
-                </h3>
-                <p className="text-concrete max-w-md mx-auto mb-8">
-                  Our discography is in the works. Follow us on social media to be the first to know when we drop new music.
-                </p>
-                <div className="flex justify-center gap-4">
-                  <MagneticHover>
-                    <motion.a
-                      href="https://instagram.com/unholyrodentsband"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-outline text-sm"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Follow on Instagram
-                    </motion.a>
-                  </MagneticHover>
-                </div>
+            {releases.length > 0 ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {releases.map((release) => (
+                  <FadeUp key={release.id}>
+                    <div className="card">
+                      <div className="aspect-square bg-charcoal mb-4 flex items-center justify-center overflow-hidden">
+                        {release.coverArt ? (
+                          <img src={release.coverArt} alt={release.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <Music className="w-16 h-16 text-blood" />
+                        )}
+                      </div>
+                      <span className="tag mb-2 inline-block text-xs">{release.type}</span>
+                      <h3 className="text-xl font-display text-paper mb-1">{release.title}</h3>
+                      <p className="text-concrete text-sm">{release.tracks.length} tracks</p>
+                    </div>
+                  </FadeUp>
+                ))}
               </div>
-            </FadeUp>
+            ) : (
+              <FadeUp delay={0.1}>
+                <div className="card text-center py-16">
+                  <motion.div
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                  >
+                    <Music className="w-20 h-20 text-blood mx-auto mb-6" />
+                  </motion.div>
+                  <h3 className="text-2xl font-display text-paper mb-4">
+                    RELEASES COMING SOON
+                  </h3>
+                  <p className="text-concrete max-w-md mx-auto mb-8">
+                    Our discography is in the works. Follow us on social media to be the first to know when we drop new music.
+                  </p>
+                  <div className="flex justify-center gap-4">
+                    <MagneticHover>
+                      <motion.a
+                        href="https://instagram.com/unholyrodentsband"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-outline text-sm"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Follow on Instagram
+                      </motion.a>
+                    </MagneticHover>
+                  </div>
+                </div>
+              </FadeUp>
+            )}
           </div>
         </section>
       </Visible>
-
     </div>
   );
 }

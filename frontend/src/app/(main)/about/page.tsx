@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Users, Music, Zap, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import {
   FadeUp,
   StaggerContainer,
@@ -14,34 +15,49 @@ import {
 } from '@/components/animations';
 import { Visible } from '@/contexts/VisibilityContext';
 
-const members = [
-  {
-    id: '1',
-    name: 'Squirrel Goddammit',
-    role: 'Vocals / Bass',
-    bio: 'The unholy voice and low-end thunder. Channeling Squātan since day one.',
-  },
-  {
-    id: '2',
-    name: 'Blind Squirrel',
-    role: 'Guitar',
-    bio: 'Even a blind squirrel finds a riff. And this one never misses.',
-  },
-  {
-    id: '3',
-    name: 'Anti-Squirrel',
-    role: 'Drums',
-    bio: 'The anti-everything percussive force. Beats like acorns falling from hell.',
-  },
-];
+interface Member {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  image: string;
+}
 
-const influences = [
-  'Slayer', 'Dead Kennedys', 'Municipal Waste', 'Discharge',
-  'Suicidal Tendencies', 'D.R.I.', 'Cro-Mags', 'Toxic Holocaust',
-  'Power Trip', 'Iron Reagan',
-];
+interface AboutData {
+  members: Member[];
+  influences: string[];
+  philosophy: { title: string; description: string }[];
+  bio: string[];
+}
 
 export default function AboutPage() {
+  const [data, setData] = useState<AboutData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/public/about')
+      .then(res => res.json())
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="relative pt-20 min-h-screen bg-void flex items-center justify-center">
+        <div className="text-concrete">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="relative pt-20 min-h-screen bg-void flex items-center justify-center">
+        <div className="text-blood">Failed to load content</div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative pt-20">
       <NoiseOverlay />
@@ -96,31 +112,13 @@ export default function AboutPage() {
               </FadeUp>
 
               <div className="space-y-6 text-lg">
-                <FadeUp delay={0.1}>
-                  <p className="text-paper">
-                    Crawling out of <span className="text-blood font-bold">Central Florida</span> - three squirrels. One dark lord. Zero compromises. Unholy Rodents is
-                    <span className="text-blood font-bold"> SQUIRRELCORE</span> - a genre we invented
-                    because nothing else could contain our chaos.
-                  </p>
-                </FadeUp>
-
-                <FadeUp delay={0.2}>
-                  <p className="text-concrete">
-                    We are the chosen ones of <span className="text-blood font-bold">Squātan</span>,
-                    the unholy squirrel god who demands only the most unhinged riffs, the most
-                    devastating breakdowns, and the loudest screams. Our mission is simple:
-                    spread the gospel of squirrelcore to every pit, every basement, every
-                    unsuspecting venue that dares to book us.
-                  </p>
-                </FadeUp>
-
-                <FadeUp delay={0.3}>
-                  <p className="text-concrete">
-                    Part thrash, part punk, part woodland creature summoning ritual -
-                    Unholy Rodents brings a sound that&apos;s equal parts chaos and precision.
-                    We hoard riffs like acorns and unleash them with fury.
-                  </p>
-                </FadeUp>
+                {data.bio.map((paragraph, index) => (
+                  <FadeUp key={index} delay={0.1 * (index + 1)}>
+                    <p className={index === 0 ? "text-paper" : "text-concrete"}>
+                      {paragraph}
+                    </p>
+                  </FadeUp>
+                ))}
 
                 <FadeUp delay={0.4}>
                   <motion.p
@@ -128,7 +126,7 @@ export default function AboutPage() {
                     animate={{ textShadow: ['0 0 0px #c41e3a', '0 0 10px #c41e3a', '0 0 0px #c41e3a'] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
-                    Hail Squātan. Fuck Animal Control. Stay Nuts.
+                    Hail Squatan. Fuck Animal Control. Stay Nuts.
                   </motion.p>
                 </FadeUp>
               </div>
@@ -150,10 +148,10 @@ export default function AboutPage() {
             </FadeUp>
 
             <StaggerContainer className="grid md:grid-cols-3 gap-6">
-              {members.map((member) => (
+              {data.members.map((member) => (
                 <StaggerItem key={member.id}>
                   <HoverCard className="card h-full">
-                    {/* Photo placeholder */}
+                    {/* Photo */}
                     <div className="aspect-square bg-charcoal mb-4 flex items-center justify-center relative overflow-hidden group">
                       <motion.div
                         className="absolute inset-0 bg-blood/20"
@@ -161,7 +159,11 @@ export default function AboutPage() {
                         whileHover={{ x: '100%' }}
                         transition={{ duration: 0.5 }}
                       />
-                      <Users className="w-16 h-16 text-blood relative z-10" />
+                      {member.image ? (
+                        <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Users className="w-16 h-16 text-blood relative z-10" />
+                      )}
                     </div>
 
                     {/* Info */}
@@ -197,7 +199,7 @@ export default function AboutPage() {
             </FadeUp>
 
             <StaggerContainer className="flex flex-wrap gap-3">
-              {influences.map((band, index) => (
+              {data.influences.map((band, index) => (
                 <StaggerItem key={band}>
                   <ShakeOnHover>
                     <motion.span
@@ -229,20 +231,7 @@ export default function AboutPage() {
             </FadeUp>
 
             <StaggerContainer className="grid md:grid-cols-3 gap-6">
-              {[
-                {
-                  title: 'DIY OR DIE',
-                  description: 'We do it ourselves. No gatekeepers, no compromise.',
-                },
-                {
-                  title: 'ALL AGES WELCOME',
-                  description: 'The pit is for everyone. Age is just a number.',
-                },
-                {
-                  title: 'LOUD & PROUD',
-                  description: 'Turn it up. If your ears are not ringing, we did not do our job.',
-                },
-              ].map((item) => (
+              {data.philosophy.map((item) => (
                 <StaggerItem key={item.title}>
                   <HoverCard className="card card-border">
                     <h3 className="text-xl font-display text-blood mb-2">

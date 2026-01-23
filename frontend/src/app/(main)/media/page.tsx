@@ -1,23 +1,49 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Camera, Video, FileImage, Instagram, Facebook } from 'lucide-react';
 import { Visible } from '@/contexts/VisibilityContext';
 
-// Placeholder - will be replaced with API calls and proper types
 interface MediaItem {
   id: string;
   url: string;
   thumbnailUrl?: string;
   title?: string;
+  type: 'photo' | 'video' | 'flyer';
 }
 
-const photos: MediaItem[] = [];
-const videos: MediaItem[] = [];
-const flyers: MediaItem[] = [];
+interface MediaData {
+  photos: MediaItem[];
+  videos: MediaItem[];
+  flyers: MediaItem[];
+}
 
 export default function MediaPage() {
+  const [data, setData] = useState<MediaData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/public/media')
+      .then(res => res.json())
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="noise min-h-screen flex items-center justify-center">
+        <div className="text-concrete">Loading...</div>
+      </div>
+    );
+  }
+
+  const photos = data?.photos || [];
+  const videos = data?.videos || [];
+  const flyers = data?.flyers || [];
+
   return (
     <div className="noise min-h-screen">
       {/* Header */}

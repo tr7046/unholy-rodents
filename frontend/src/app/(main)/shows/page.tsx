@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock, Ticket } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import {
   FadeUp,
   StaggerContainer,
@@ -14,7 +15,7 @@ import {
 import { Visible } from '@/contexts/VisibilityContext';
 
 interface ShowBand {
-  bandName: string;
+  name: string;
   isHeadliner: boolean;
 }
 
@@ -33,18 +34,10 @@ interface Show {
   bands?: ShowBand[];
 }
 
-const upcomingShows: Show[] = [];
-const pastShows: Show[] = [
-  {
-    id: '1',
-    date: '2024-01-15',
-    venue: { name: 'The Haven', city: 'Orlando', state: 'FL' },
-    bands: [
-      { bandName: 'Unholy Rodents', isHeadliner: true },
-      { bandName: 'Rat Attack', isHeadliner: false },
-    ],
-  },
-];
+interface ShowsData {
+  upcoming: Show[];
+  past: Show[];
+}
 
 function formatDate(dateStr: string) {
   const date = new Date(dateStr);
@@ -93,7 +86,7 @@ function ShowCard({ show, isPast = false }: { show: Show; isPast?: boolean }) {
           {show.bands && show.bands.length > 0 && (
             <div className="mb-4">
               <p className="text-sm text-concrete">
-                w/ {show.bands.filter(b => !b.isHeadliner).map(b => b.bandName).join(', ')}
+                w/ {show.bands.filter(b => !b.isHeadliner).map(b => b.name).join(', ')}
               </p>
             </div>
           )}
@@ -125,6 +118,28 @@ function ShowCard({ show, isPast = false }: { show: Show; isPast?: boolean }) {
 }
 
 export default function ShowsPage() {
+  const [data, setData] = useState<ShowsData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/public/shows')
+      .then(res => res.json())
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="relative pt-20 min-h-screen bg-void flex items-center justify-center">
+        <div className="text-concrete">Loading...</div>
+      </div>
+    );
+  }
+
+  const upcomingShows = data?.upcoming || [];
+  const pastShows = data?.past || [];
+
   return (
     <div className="relative pt-20">
       <NoiseOverlay />

@@ -2,12 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 import routes from './routes';
 
 const app = express();
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow images to be loaded from other origins
+}));
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
@@ -21,7 +24,10 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// Body parsing
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
+
+// Body parsing (but not for multipart - we handle that manually in upload route)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

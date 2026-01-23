@@ -5,6 +5,7 @@ import releasesRouter from './releases';
 import mediaRouter from './media';
 import subscribersRouter from './subscribers';
 import contentRouter from './content';
+import uploadRouter from './upload';
 import { authenticate } from '../../middleware/auth';
 
 const router = Router();
@@ -18,5 +19,6 @@ router.use('/releases', authenticate, releasesRouter);
 router.use('/media', authenticate, mediaRouter);
 router.use('/subscribers', authenticate, subscribersRouter);
 router.use('/content', authenticate, contentRouter);
+router.use('/upload', authenticate, uploadRouter);
 
 export default router;

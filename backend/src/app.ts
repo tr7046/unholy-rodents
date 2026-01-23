@@ -7,8 +7,8 @@ import routes from './routes';
 
 const app = express();
 
-// Trust proxy for Railway/Vercel deployments
-app.set('trust proxy', 1);
+// Trust proxy for Railway/Vercel deployments (required for rate limiting behind proxy)
+app.set('trust proxy', true);
 
 // Security middleware
 app.use(helmet({

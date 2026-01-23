@@ -7,6 +7,9 @@ import routes from './routes';
 
 const app = express();
 
+// Trust proxy for Railway/Vercel deployments
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow images to be loaded from other origins
@@ -20,7 +23,9 @@ app.use(cors({
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
-  message: { success: false, error: 'Too many requests, slow down.' }
+  message: { success: false, error: 'Too many requests, slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use('/api', limiter);
 

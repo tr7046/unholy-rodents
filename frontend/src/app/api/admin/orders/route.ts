@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { readData, writeData, generateId } from '@/lib/data';
 import { OrderSchema, OrderUpdateSchema, validateRequest } from '@/lib/schemas';
 import { z } from 'zod';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const CONTENT_KEY = 'orders';
 
 type Order = z.infer<typeof OrderSchema> & { id: string; createdAt: string; updatedAt: string };
 
@@ -10,9 +12,45 @@ interface OrdersData {
   orders: Order[];
 }
 
+const defaultData: OrdersData = {
+  orders: [],
+};
+
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
 // Disable caching for dynamic data
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+async function getContentFromBackend(): Promise<OrdersData> {
+  try {
+    const response = await fetch(`${API_URL}/content/${CONTENT_KEY}`, {
+      cache: 'no-store',
+    });
+    if (!response.ok) return defaultData;
+    return await response.json();
+  } catch {
+    return defaultData;
+  }
+}
+
+async function saveContentToBackend(data: OrdersData, token: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ value: data }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
 
 export async function GET() {
   try {
@@ -20,7 +58,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const data = await readData<OrdersData>('orders');
+    const data = await getContentFromBackend();
     return NextResponse.json(data, {
       headers: { 'Cache-Control': 'no-store, max-age=0' },
     });
@@ -40,7 +78,9 @@ export async function POST(request: NextRequest) {
     }
 
     const order = validation.data;
-    const data = await readData<OrdersData>('orders');
+    const data = await getContentFromBackend();
+    // For public order creation, we don't have admin token - use empty string
+    const token = request.cookies.get('admin_token')?.value || '';
 
     const newOrder: Order = {
       ...order,
@@ -51,7 +91,7 @@ export async function POST(request: NextRequest) {
     };
 
     data.orders.unshift(newOrder);
-    await writeData('orders', data);
+    await saveContentToBackend(data, token);
 
     return NextResponse.json(newOrder, { status: 201 });
   } catch {
@@ -73,7 +113,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const { id, status, trackingNumber } = validation.data;
-    const data = await readData<OrdersData>('orders');
+    const data = await getContentFromBackend();
+    const token = request.cookies.get('admin_token')?.value || '';
 
     const index = data.orders.findIndex((o) => o.id === id);
     if (index === -1) {
@@ -87,7 +128,7 @@ export async function PUT(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     };
 
-    await writeData('orders', data);
+    await saveContentToBackend(data, token);
     return NextResponse.json(data.orders[index]);
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

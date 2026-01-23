@@ -148,3 +148,30 @@ export interface ContactRequest {
   subject?: string;
   message: string;
 }
+
+// Site Content (CMS)
+export async function getContent<T>(key: string): Promise<T | null> {
+  try {
+    const response = await fetch(`${API_URL}/content/${key}`);
+    if (!response.ok) return null;
+    return response.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function updateContent<T>(key: string, value: T, token: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_URL}/admin/content/${key}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ value }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { readData } from '@/lib/data';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const CONTENT_KEY = 'shows';
 
 // Disable caching for dynamic data
 export const dynamic = 'force-dynamic';
@@ -30,9 +32,26 @@ interface ShowsDataRaw {
   pastShows: Show[];
 }
 
+const defaultData: ShowsDataRaw = {
+  upcomingShows: [],
+  pastShows: [],
+};
+
+async function getContentFromBackend(): Promise<ShowsDataRaw> {
+  try {
+    const response = await fetch(`${API_URL}/content/${CONTENT_KEY}`, {
+      cache: 'no-store',
+    });
+    if (!response.ok) return defaultData;
+    return await response.json();
+  } catch {
+    return defaultData;
+  }
+}
+
 export async function GET() {
   try {
-    const data = await readData<ShowsDataRaw>('shows');
+    const data = await getContentFromBackend();
     // Transform to consistent API response
     return NextResponse.json({
       upcoming: data.upcomingShows || [],

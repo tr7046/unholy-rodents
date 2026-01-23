@@ -53,12 +53,18 @@ export async function POST(request: NextRequest) {
     const absolutePath = path.join(uploadDir, filename);
 
     // Ensure upload directory exists
+    console.log('[upload] cwd:', process.cwd());
+    console.log('[upload] uploadDir:', uploadDir);
+    console.log('[upload] absolutePath:', absolutePath);
+
     await mkdir(uploadDir, { recursive: true });
     await writeFile(absolutePath, buffer);
 
+    console.log('[upload] Success:', relativePath);
     return NextResponse.json({ url: relativePath });
   } catch (error) {
     console.error('[upload] Failed:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Upload failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

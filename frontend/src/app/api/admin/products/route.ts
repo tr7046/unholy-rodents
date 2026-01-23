@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { readData, writeData, generateId } from '@/lib/data';
 import { ProductSchema, validateRequest } from '@/lib/schemas';
 import { z } from 'zod';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const CONTENT_KEY = 'products';
 
 type Product = z.infer<typeof ProductSchema> & { id: string };
 
@@ -15,9 +17,50 @@ interface ProductsData {
   };
 }
 
+const defaultData: ProductsData = {
+  products: [],
+  shippingRates: {
+    standard: { name: 'Standard Shipping', price: 5.99, estimatedDays: '5-7' },
+    express: { name: 'Express Shipping', price: 12.99, estimatedDays: '2-3' },
+    freeShippingThreshold: 50,
+  },
+};
+
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
 // Disable caching for dynamic data
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+async function getContentFromBackend(): Promise<ProductsData> {
+  try {
+    const response = await fetch(`${API_URL}/content/${CONTENT_KEY}`, {
+      cache: 'no-store',
+    });
+    if (!response.ok) return defaultData;
+    return await response.json();
+  } catch {
+    return defaultData;
+  }
+}
+
+async function saveContentToBackend(data: ProductsData, token: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ value: data }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
 
 export async function GET() {
   try {
@@ -25,7 +68,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const data = await readData<ProductsData>('products');
+    const data = await getContentFromBackend();
     return NextResponse.json(data, {
       headers: { 'Cache-Control': 'no-store, max-age=0' },
     });
@@ -48,7 +91,8 @@ export async function POST(request: NextRequest) {
     }
 
     const product = validation.data;
-    const data = await readData<ProductsData>('products');
+    const data = await getContentFromBackend();
+    const token = request.cookies.get('admin_token')?.value || '';
 
     const newProduct: Product = {
       ...product,
@@ -60,7 +104,7 @@ export async function POST(request: NextRequest) {
     };
 
     data.products.push(newProduct);
-    await writeData('products', data);
+    await saveContentToBackend(data, token);
 
     return NextResponse.json(newProduct, { status: 201 });
   } catch {
@@ -82,7 +126,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const product = validation.data;
-    const data = await readData<ProductsData>('products');
+    const data = await getContentFromBackend();
+    const token = request.cookies.get('admin_token')?.value || '';
 
     const index = data.products.findIndex((p) => p.id === product.id);
     if (index === -1) {
@@ -90,7 +135,7 @@ export async function PUT(request: NextRequest) {
     }
 
     data.products[index] = product as Product;
-    await writeData('products', data);
+    await saveContentToBackend(data, token);
 
     return NextResponse.json(product);
   } catch {
@@ -111,9 +156,10 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
     }
 
-    const data = await readData<ProductsData>('products');
+    const data = await getContentFromBackend();
+    const token = request.cookies.get('admin_token')?.value || '';
     data.products = data.products.filter((p) => p.id !== id);
-    await writeData('products', data);
+    await saveContentToBackend(data, token);
 
     return NextResponse.json({ success: true });
   } catch {

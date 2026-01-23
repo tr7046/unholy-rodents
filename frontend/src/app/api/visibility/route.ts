@@ -1,26 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readData, writeData } from '@/lib/data';
 import { isAuthenticated } from '@/lib/auth';
 import { VisibilityConfig, defaultVisibilityConfig } from '@/lib/visibility-config';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const CONTENT_KEY = 'visibility';
 
 interface VisibilityData {
   config: VisibilityConfig;
   updatedAt: string;
 }
 
+const defaultData: VisibilityData = {
+  config: defaultVisibilityConfig,
+  updatedAt: new Date().toISOString(),
+};
+
 // Disable caching for dynamic data
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+async function getContentFromBackend(): Promise<VisibilityData> {
+  try {
+    const response = await fetch(`${API_URL}/content/${CONTENT_KEY}`, {
+      cache: 'no-store',
+    });
+    if (!response.ok) return defaultData;
+    return await response.json();
+  } catch {
+    return defaultData;
+  }
+}
+
+async function saveContentToBackend(data: VisibilityData, token: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ value: data }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 // GET - Fetch current visibility config (public)
 export async function GET() {
   try {
-    const data = await readData<VisibilityData>('visibility');
+    const data = await getContentFromBackend();
     return NextResponse.json(data?.config || defaultVisibilityConfig, {
       headers: { 'Cache-Control': 'no-store, max-age=0' },
     });
   } catch {
-    // Return default config if file doesn't exist
+    // Return default config if fetch fails
     return NextResponse.json(defaultVisibilityConfig, {
       headers: { 'Cache-Control': 'no-store, max-age=0' },
     });
@@ -41,12 +76,14 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid visibility config structure' }, { status: 400 });
     }
 
+    const token = request.cookies.get('admin_token')?.value || '';
+
     const data: VisibilityData = {
       config: body as VisibilityConfig,
       updatedAt: new Date().toISOString(),
     };
 
-    await writeData('visibility', data);
+    await saveContentToBackend(data, token);
 
     return NextResponse.json({ success: true, config: data.config });
   } catch (error) {
@@ -70,12 +107,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Get current config
-    let data: VisibilityData;
-    try {
-      data = await readData<VisibilityData>('visibility');
-    } catch {
-      data = { config: defaultVisibilityConfig, updatedAt: new Date().toISOString() };
-    }
+    const data = await getContentFromBackend();
+    const token = request.cookies.get('admin_token')?.value || '';
 
     // Update the specific path
     const parts = path.split('.');
@@ -96,7 +129,7 @@ export async function PATCH(request: NextRequest) {
     current[lastKey] = value;
     data.updatedAt = new Date().toISOString();
 
-    await writeData('visibility', data);
+    await saveContentToBackend(data, token);
 
     return NextResponse.json({ success: true, path, value });
   } catch (error) {

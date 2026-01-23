@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { readData, writeData, generateId } from '@/lib/data';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const CONTENT_KEY = 'about';
 
 interface Member {
   id: string;
@@ -17,9 +19,48 @@ interface AboutData {
   bio: string[];
 }
 
+const defaultData: AboutData = {
+  members: [],
+  influences: [],
+  philosophy: [],
+  bio: [],
+};
+
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
 // Disable caching for dynamic data
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+async function getContentFromBackend(): Promise<AboutData> {
+  try {
+    const response = await fetch(`${API_URL}/content/${CONTENT_KEY}`, {
+      cache: 'no-store',
+    });
+    if (!response.ok) return defaultData;
+    return await response.json();
+  } catch {
+    return defaultData;
+  }
+}
+
+async function saveContentToBackend(data: AboutData, token: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ value: data }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
 
 export async function GET() {
   try {
@@ -27,11 +68,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const data = await readData<AboutData>('about');
+    const data = await getContentFromBackend();
     return NextResponse.json(data, {
-      headers: {
-        'Cache-Control': 'no-store, max-age=0',
-      },
+      headers: { 'Cache-Control': 'no-store, max-age=0' },
     });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -45,7 +84,10 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const data = await readData<AboutData>('about');
+    const data = await getContentFromBackend();
+
+    // Get auth token from cookies
+    const token = request.cookies.get('admin_token')?.value || '';
 
     // Handle member operations
     if (body.action === 'addMember') {
@@ -54,7 +96,7 @@ export async function PUT(request: NextRequest) {
         id: generateId(),
       };
       data.members.push(newMember);
-      await writeData('about', data);
+      await saveContentToBackend(data, token);
       return NextResponse.json(newMember);
     }
 
@@ -62,14 +104,14 @@ export async function PUT(request: NextRequest) {
       const index = data.members.findIndex((m) => m.id === body.member.id);
       if (index !== -1) {
         data.members[index] = body.member;
-        await writeData('about', data);
+        await saveContentToBackend(data, token);
       }
       return NextResponse.json(body.member);
     }
 
     if (body.action === 'deleteMember') {
       data.members = data.members.filter((m) => m.id !== body.memberId);
-      await writeData('about', data);
+      await saveContentToBackend(data, token);
       return NextResponse.json({ success: true });
     }
 
@@ -81,9 +123,10 @@ export async function PUT(request: NextRequest) {
       bio: body.bio || data.bio,
     };
 
-    await writeData('about', updatedData);
+    await saveContentToBackend(updatedData, token);
     return NextResponse.json(updatedData);
-  } catch {
+  } catch (error) {
+    console.error('[about] PUT failed:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

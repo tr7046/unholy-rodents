@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { readData, writeData } from '@/lib/data';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const CONTENT_KEY = 'homepage';
 
 interface HomepageData {
   hero: {
@@ -19,9 +21,54 @@ interface HomepageData {
   };
 }
 
+const defaultData: HomepageData = {
+  hero: {
+    title: 'UNIVERSAL RHYTHM',
+    tagline: ['CHAOS', 'NOISE', 'FURY'],
+    marqueeText: 'UNIVERSAL RHYTHM',
+  },
+  featuredShow: {
+    enabled: false,
+    showId: null,
+  },
+  featuredRelease: {
+    enabled: false,
+    releaseId: null,
+    placeholderText: 'NEW MUSIC COMING SOON',
+  },
+};
+
 // Disable caching for dynamic data
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+async function getContentFromBackend(): Promise<HomepageData> {
+  try {
+    const response = await fetch(`${API_URL}/content/${CONTENT_KEY}`, {
+      cache: 'no-store',
+    });
+    if (!response.ok) return defaultData;
+    return await response.json();
+  } catch {
+    return defaultData;
+  }
+}
+
+async function saveContentToBackend(data: HomepageData, token: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ value: data }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
 
 export async function GET() {
   try {
@@ -29,7 +76,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const data = await readData<HomepageData>('homepage');
+    const data = await getContentFromBackend();
     return NextResponse.json(data, {
       headers: { 'Cache-Control': 'no-store, max-age=0' },
     });
@@ -45,7 +92,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const data = await readData<HomepageData>('homepage');
+    const data = await getContentFromBackend();
+    const token = request.cookies.get('admin_token')?.value || '';
 
     const updatedData: HomepageData = {
       hero: body.hero || data.hero,
@@ -53,7 +101,7 @@ export async function PUT(request: NextRequest) {
       featuredRelease: body.featuredRelease || data.featuredRelease,
     };
 
-    await writeData('homepage', updatedData);
+    await saveContentToBackend(updatedData, token);
     return NextResponse.json(updatedData);
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

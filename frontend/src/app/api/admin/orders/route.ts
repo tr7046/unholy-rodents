@@ -10,6 +10,10 @@ interface OrdersData {
   orders: Order[];
 }
 
+// Disable caching for dynamic data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     if (!(await isAuthenticated())) {
@@ -17,7 +21,9 @@ export async function GET() {
     }
 
     const data = await readData<OrdersData>('orders');
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: { 'Cache-Control': 'no-store, max-age=0' },
+    });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

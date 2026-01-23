@@ -8,14 +8,22 @@ interface VisibilityData {
   updatedAt: string;
 }
 
+// Disable caching for dynamic data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET - Fetch current visibility config (public)
 export async function GET() {
   try {
     const data = await readData<VisibilityData>('visibility');
-    return NextResponse.json(data?.config || defaultVisibilityConfig);
+    return NextResponse.json(data?.config || defaultVisibilityConfig, {
+      headers: { 'Cache-Control': 'no-store, max-age=0' },
+    });
   } catch {
     // Return default config if file doesn't exist
-    return NextResponse.json(defaultVisibilityConfig);
+    return NextResponse.json(defaultVisibilityConfig, {
+      headers: { 'Cache-Control': 'no-store, max-age=0' },
+    });
   }
 }
 

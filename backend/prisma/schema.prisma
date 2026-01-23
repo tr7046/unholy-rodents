@@ -276,6 +276,19 @@ enum PressKitType {
 }
 
 // ============================================
+// SITE CONTENT (Key-Value Store for CMS)
+// ============================================
+
+model SiteContent {
+  id        String   @id @default(cuid())
+  key       String   @unique  // e.g., "about", "homepage", "visibility", "music_config"
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("site_content")
+}
+
+// ============================================
 // ADMIN
 // ============================================
 

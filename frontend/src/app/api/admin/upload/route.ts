@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { MAX_FILE_SIZE, ALLOWED_IMAGE_TYPES, ALLOWED_FOLDERS } from '@/lib/schemas';
 
@@ -49,12 +49,16 @@ export async function POST(request: NextRequest) {
     const ext = path.extname(file.name).toLowerCase();
     const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}${ext}`;
     const relativePath = `/uploads/${folder}/${filename}`;
-    const absolutePath = path.join(process.cwd(), 'public', relativePath);
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', folder);
+    const absolutePath = path.join(uploadDir, filename);
 
+    // Ensure upload directory exists
+    await mkdir(uploadDir, { recursive: true });
     await writeFile(absolutePath, buffer);
 
     return NextResponse.json({ url: relativePath });
-  } catch {
+  } catch (error) {
+    console.error('[upload] Failed:', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }

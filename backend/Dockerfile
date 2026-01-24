@@ -9,8 +9,9 @@ COPY prisma ./prisma/
 # Install dependencies
 RUN npm ci
 
-# Generate Prisma Client
-RUN npm run db:generate
+# Generate Prisma Client (provide dummy URL for build - actual URL used at runtime)
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+RUN npx prisma generate
 
 # Copy source
 COPY . .
@@ -34,5 +35,5 @@ COPY --from=builder /app/package*.json ./
 # Expose port
 EXPOSE 3001
 
-# Start - run prisma db push then start server
-CMD ["sh", "-c", "npx prisma db push && node dist/index.js"]
+# Start - regenerate prisma client, push schema, then start server
+CMD ["sh", "-c", "npx prisma generate && npx prisma db push && node dist/index.js"]

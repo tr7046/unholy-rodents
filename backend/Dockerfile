@@ -34,5 +34,5 @@ COPY --from=builder /app/package*.json ./
 # Expose port
 EXPOSE 3001
 
-# Start - regenerate prisma client, push schema, then start server
-CMD ["sh", "-c", "npx prisma generate && npx prisma db push && node dist/index.js"]
+# Start server (schema sync handled separately)
+CMD ["node", "dist/index.js"]

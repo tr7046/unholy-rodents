@@ -18,7 +18,9 @@ router.use('/shows', authenticate, showsRouter);
 router.use('/releases', authenticate, releasesRouter);
 router.use('/media', authenticate, mediaRouter);
 router.use('/subscribers', authenticate, subscribersRouter);
-router.use('/content', authenticate, contentRouter);
 router.use('/upload', authenticate, uploadRouter);
+
+// Content routes - frontend handles auth via session cookie
+router.use('/content', contentRouter);
 
 export default router;

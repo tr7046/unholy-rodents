@@ -19,6 +19,9 @@ import {
   EyeIcon,
 } from '@heroicons/react/24/outline';
 
+// Build version - updated on each deploy to force cache refresh
+const BUILD_VERSION = '2026-01-24-v1';
+
 const navigation = [
   { name: 'Dashboard', href: '/hailsquatan/dashboard', icon: Squares2X2Icon, shortName: 'Dash' },
   { name: 'Products', href: '/hailsquatan/products', icon: ShoppingBagIcon, shortName: 'Merch' },
@@ -48,6 +51,18 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+
+  // Auto-refresh when new version is deployed
+  useEffect(() => {
+    const cachedVersion = localStorage.getItem('admin_build_version');
+    if (cachedVersion && cachedVersion !== BUILD_VERSION) {
+      // New version detected - clear cache and reload
+      localStorage.setItem('admin_build_version', BUILD_VERSION);
+      window.location.reload();
+    } else if (!cachedVersion) {
+      localStorage.setItem('admin_build_version', BUILD_VERSION);
+    }
+  }, []);
 
   // Login page doesn't need the admin chrome
   const isLoginPage = pathname === '/hailsquatan';

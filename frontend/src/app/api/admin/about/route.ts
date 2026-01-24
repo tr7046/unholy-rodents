@@ -40,7 +40,14 @@ async function getContentFromBackend(): Promise<AboutData> {
       cache: 'no-store',
     });
     if (!response.ok) return defaultData;
-    return await response.json();
+    const data = await response.json();
+    // Merge with defaults to ensure all required properties exist
+    return {
+      members: Array.isArray(data?.members) ? data.members : defaultData.members,
+      influences: Array.isArray(data?.influences) ? data.influences : defaultData.influences,
+      philosophy: Array.isArray(data?.philosophy) ? data.philosophy : defaultData.philosophy,
+      bio: Array.isArray(data?.bio) ? data.bio : defaultData.bio,
+    };
   } catch {
     return defaultData;
   }

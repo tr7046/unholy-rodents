@@ -15,6 +15,7 @@ dist/
 /blob-report/
 /playwright/.cache/
 test-results/
+tests/
 
 # Misc
 .DS_Store

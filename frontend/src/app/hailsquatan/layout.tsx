@@ -20,7 +20,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 // Build version - updated on each deploy to force cache refresh
-const BUILD_VERSION = '2026-01-24-v1';
+const BUILD_VERSION = '2026-01-24-v2';
 
 const navigation = [
   { name: 'Dashboard', href: '/hailsquatan/dashboard', icon: Squares2X2Icon, shortName: 'Dash' },

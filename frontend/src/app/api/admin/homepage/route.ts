@@ -23,18 +23,18 @@ interface HomepageData {
 
 const defaultData: HomepageData = {
   hero: {
-    title: 'UNIVERSAL RHYTHM',
-    tagline: ['CHAOS', 'NOISE', 'FURY'],
-    marqueeText: 'UNIVERSAL RHYTHM',
+    title: 'UNHOLY RODENTS',
+    tagline: ['SQUIRRELCORE FROM THE DEPTHS OF THE SQUNDERWORLD', 'HAIL SQUĀTAN'],
+    marqueeText: 'HAIL SQUATAN /// FUCK ANIMAL CONTROL /// STAY NUTS /// SQUIRRELCORE',
   },
   featuredShow: {
-    enabled: false,
+    enabled: true,
     showId: null,
   },
   featuredRelease: {
-    enabled: false,
+    enabled: true,
     releaseId: null,
-    placeholderText: 'NEW MUSIC COMING SOON',
+    placeholderText: 'New music is in the works. Stay tuned for announcements about our upcoming releases.',
   },
 };
 
@@ -48,7 +48,23 @@ async function getContentFromBackend(): Promise<HomepageData> {
       cache: 'no-store',
     });
     if (!response.ok) return defaultData;
-    return await response.json();
+    const data = await response.json();
+    return {
+      hero: {
+        title: data?.hero?.title || defaultData.hero.title,
+        tagline: Array.isArray(data?.hero?.tagline) ? data.hero.tagline : defaultData.hero.tagline,
+        marqueeText: data?.hero?.marqueeText || defaultData.hero.marqueeText,
+      },
+      featuredShow: {
+        enabled: data?.featuredShow?.enabled ?? defaultData.featuredShow.enabled,
+        showId: data?.featuredShow?.showId || null,
+      },
+      featuredRelease: {
+        enabled: data?.featuredRelease?.enabled ?? defaultData.featuredRelease.enabled,
+        releaseId: data?.featuredRelease?.releaseId || null,
+        placeholderText: data?.featuredRelease?.placeholderText || defaultData.featuredRelease.placeholderText,
+      },
+    };
   } catch {
     return defaultData;
   }

@@ -25,7 +25,11 @@ async function getContentFromBackend(): Promise<VisibilityData> {
       cache: 'no-store',
     });
     if (!response.ok) return defaultData;
-    return await response.json();
+    const data = await response.json();
+    return {
+      config: data?.config || defaultData.config,
+      updatedAt: data?.updatedAt || defaultData.updatedAt,
+    };
   } catch {
     return defaultData;
   }

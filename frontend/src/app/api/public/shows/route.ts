@@ -43,7 +43,11 @@ async function getContentFromBackend(): Promise<ShowsDataRaw> {
       cache: 'no-store',
     });
     if (!response.ok) return defaultData;
-    return await response.json();
+    const data = await response.json();
+    return {
+      upcomingShows: Array.isArray(data?.upcomingShows) ? data.upcomingShows : defaultData.upcomingShows,
+      pastShows: Array.isArray(data?.pastShows) ? data.pastShows : defaultData.pastShows,
+    };
   } catch {
     return defaultData;
   }

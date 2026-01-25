@@ -40,7 +40,11 @@ async function getContentFromBackend(): Promise<ProductsData> {
       cache: 'no-store',
     });
     if (!response.ok) return defaultData;
-    return await response.json();
+    const data = await response.json();
+    return {
+      products: Array.isArray(data?.products) ? data.products : defaultData.products,
+      shippingRates: data?.shippingRates || defaultData.shippingRates,
+    };
   } catch {
     return defaultData;
   }

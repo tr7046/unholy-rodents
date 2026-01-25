@@ -30,7 +30,10 @@ async function getContentFromBackend(): Promise<OrdersData> {
       cache: 'no-store',
     });
     if (!response.ok) return defaultData;
-    return await response.json();
+    const data = await response.json();
+    return {
+      orders: Array.isArray(data?.orders) ? data.orders : defaultData.orders,
+    };
   } catch {
     return defaultData;
   }

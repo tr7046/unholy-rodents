@@ -33,7 +33,11 @@ async function getContentFromBackend(): Promise<MusicData> {
       cache: 'no-store',
     });
     if (!response.ok) return defaultData;
-    return await response.json();
+    const data = await response.json();
+    return {
+      releases: Array.isArray(data?.releases) ? data.releases : defaultData.releases,
+      streamingPlatforms: Array.isArray(data?.streamingPlatforms) ? data.streamingPlatforms : defaultData.streamingPlatforms,
+    };
   } catch {
     return defaultData;
   }

@@ -38,7 +38,12 @@ async function getContentFromBackend(): Promise<MediaData> {
       cache: 'no-store',
     });
     if (!response.ok) return defaultData;
-    return await response.json();
+    const data = await response.json();
+    return {
+      photos: Array.isArray(data?.photos) ? data.photos : defaultData.photos,
+      videos: Array.isArray(data?.videos) ? data.videos : defaultData.videos,
+      flyers: Array.isArray(data?.flyers) ? data.flyers : defaultData.flyers,
+    };
   } catch {
     return defaultData;
   }

@@ -69,12 +69,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[upload] Failed:', error);
     const message = error instanceof Error ? error.message : 'Upload failed';
-    const hasCloudName = !!process.env.CLOUDINARY_CLOUD_NAME;
-    const hasApiKey = !!process.env.CLOUDINARY_API_KEY;
-    const hasApiSecret = !!process.env.CLOUDINARY_API_SECRET;
-    return NextResponse.json({
-      error: message,
-      debug: { hasCloudName, hasApiKey, hasApiSecret },
-    }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
+import { v2 as cloudinary } from 'cloudinary';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,46 +14,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get the raw body as ArrayBuffer
     const formData = await request.formData();
+    const file = formData.get('file') as File | null;
+    const folder = (formData.get('folder') as string) || 'general';
 
-    // Get auth token from cookies
-    const token = request.cookies.get('admin_token')?.value || '';
-
-    // Create a new FormData to send to backend
-    const backendFormData = new FormData();
-
-    const file = formData.get('file');
-    const folder = formData.get('folder');
-
-    if (file) {
-      backendFormData.append('file', file);
-    }
-    if (folder) {
-      backendFormData.append('folder', folder);
+    if (!file) {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Forward to Railway backend
-    const response = await fetch(`${API_URL}/admin/upload`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: backendFormData,
+    // Convert file to buffer
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Upload to Cloudinary
+    const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: `unholy-rodents/${folder}`,
+          resource_type: 'auto',
+        },
+        (error, result) => {
+          if (error || !result) return reject(error || new Error('Upload failed'));
+          resolve(result);
+        },
+      ).end(buffer);
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
-    }
-
-    // The URL from backend is relative to Railway, need to make it absolute
-    // e.g., /uploads/members/123.jpg -> https://railway-backend.com/uploads/members/123.jpg
-    const backendUrl = API_URL.replace('/api/v1', '');
-    const absoluteUrl = `${backendUrl}${data.url}`;
-
-    return NextResponse.json({ url: absoluteUrl });
+    return NextResponse.json({ url: result.secure_url });
   } catch (error) {
     console.error('[upload] Failed:', error);
     const message = error instanceof Error ? error.message : 'Upload failed';

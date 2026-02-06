@@ -11,10 +11,12 @@ import {
   ClipboardDocumentListIcon,
   Squares2X2Icon,
   ArrowLeftIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/24/outline';
 
 const allSections = {
   dashboard: { name: 'Dashboard', href: '/hailsquatan/dashboard', icon: Squares2X2Icon },
+  messages: { name: 'Messages', href: '/hailsquatan/messages', icon: EnvelopeIcon },
   products: { name: 'Products', href: '/hailsquatan/products', icon: ShoppingBagIcon },
   shows: { name: 'Shows', href: '/hailsquatan/shows', icon: TicketIcon },
   music: { name: 'Music', href: '/hailsquatan/music', icon: MusicalNoteIcon },

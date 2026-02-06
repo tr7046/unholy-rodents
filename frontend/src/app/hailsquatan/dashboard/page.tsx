@@ -12,6 +12,7 @@ import {
   CheckCircleIcon,
   PlusIcon,
   ChevronRightIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/24/outline';
 
 interface DashboardStats {
@@ -32,6 +33,10 @@ interface DashboardStats {
   };
   music: {
     releases: number;
+  };
+  messages: {
+    total: number;
+    unread: number;
   };
 }
 
@@ -56,17 +61,19 @@ export default function DashboardPage() {
 
   async function fetchDashboardData() {
     try {
-      const [productsRes, showsRes, ordersRes, musicRes] = await Promise.all([
+      const [productsRes, showsRes, ordersRes, musicRes, messagesRes] = await Promise.all([
         fetch('/api/admin/products'),
         fetch('/api/admin/shows'),
         fetch('/api/admin/orders'),
         fetch('/api/admin/music'),
+        fetch('/api/admin/messages?limit=1'),
       ]);
 
       const products = productsRes.ok ? await productsRes.json() : { products: [] };
       const shows = showsRes.ok ? await showsRes.json() : { upcomingShows: [], pastShows: [] };
       const orders = ordersRes.ok ? await ordersRes.json() : { orders: [] };
       const music = musicRes.ok ? await musicRes.json() : { releases: [] };
+      const messages = messagesRes.ok ? await messagesRes.json() : { total: 0, unreadCount: 0 };
 
       const productStats = {
         total: products.products?.length || 0,
@@ -92,6 +99,10 @@ export default function DashboardPage() {
         orders: orderStats,
         music: {
           releases: music.releases?.length || 0,
+        },
+        messages: {
+          total: messages.total || 0,
+          unread: messages.unreadCount || 0,
         },
       });
     } catch (error) {
@@ -214,6 +225,32 @@ export default function DashboardPage() {
           </div>
         </Link>
 
+        {/* Messages */}
+        <Link href="/hailsquatan/messages" className="bg-[#1a1a1a] border border-[#333] rounded-lg p-6 hover:border-[#c41e3a] transition-colors group relative">
+          {(stats?.messages.unread || 0) > 0 && (
+            <span className="absolute -top-2 -right-2 w-6 h-6 bg-[#c41e3a] text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+              {stats?.messages.unread}
+            </span>
+          )}
+          <div className="flex items-center justify-between">
+            <div className="w-12 h-12 bg-[#252525] rounded-lg flex items-center justify-center group-hover:bg-[#c41e3a]/10">
+              <EnvelopeIcon className="w-6 h-6 text-[#c41e3a]" />
+            </div>
+            <ChevronRightIcon className="w-5 h-5 text-[#666] group-hover:text-[#c41e3a]" />
+          </div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold text-[#f5f5f0]">{stats?.messages.total || 0}</div>
+            <div className="text-sm text-[#888888]">Messages</div>
+          </div>
+          <div className="mt-2 text-sm">
+            {(stats?.messages.unread || 0) > 0 ? (
+              <span className="text-[#c41e3a]">{stats?.messages.unread} unread</span>
+            ) : (
+              <span className="text-[#888888]">All read ya legend</span>
+            )}
+          </div>
+        </Link>
+
         {/* Revenue */}
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-6">
           <div className="flex items-center justify-between">
@@ -237,6 +274,15 @@ export default function DashboardPage() {
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-6">
           <h2 className="!text-lg font-bold text-[#f5f5f0] mb-4">Alerts</h2>
           <div className="space-y-3">
+            {(stats?.messages.unread || 0) > 0 && (
+              <Link href="/hailsquatan/messages" className="flex items-start gap-3 bg-[#c41e3a]/10 border border-[#c41e3a]/30 rounded-lg p-4 hover:bg-[#c41e3a]/20 transition-colors">
+                <EnvelopeIcon className="w-5 h-5 text-[#c41e3a] flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-[#f5f5f0] font-medium">New Messages, Ya Sick Cunt!</div>
+                  <div className="text-sm text-[#888888]">{stats?.messages.unread} unread message{stats?.messages.unread !== 1 ? 's' : ''} waiting for ya</div>
+                </div>
+              </Link>
+            )}
             {(stats?.products.lowStock || 0) > 0 && (
               <div className="flex items-start gap-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                 <ExclamationTriangleIcon className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
@@ -266,6 +312,7 @@ export default function DashboardPage() {
             )}
             {(stats?.products.lowStock || 0) === 0 &&
              (stats?.orders.pending || 0) === 0 &&
+             (stats?.messages.unread || 0) === 0 &&
              (stats?.shows.upcoming || 0) > 0 && (
               <div className="flex items-start gap-3 bg-green-500/10 border border-green-500/30 rounded-lg p-4">
                 <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
@@ -347,7 +394,19 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-6">
         <h2 className="!text-lg font-bold text-[#f5f5f0] mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <Link
+            href="/hailsquatan/messages"
+            className="flex flex-col items-center gap-2 p-4 bg-[#252525] rounded-lg hover:bg-[#333] transition-colors relative"
+          >
+            {(stats?.messages.unread || 0) > 0 && (
+              <span className="absolute top-2 right-2 w-5 h-5 bg-[#c41e3a] text-white text-xs font-bold rounded-full flex items-center justify-center">
+                {stats?.messages.unread}
+              </span>
+            )}
+            <EnvelopeIcon className="w-8 h-8 text-[#c41e3a]" />
+            <span className="text-sm text-[#f5f5f0]">Messages</span>
+          </Link>
           <Link
             href="/hailsquatan/products"
             className="flex flex-col items-center gap-2 p-4 bg-[#252525] rounded-lg hover:bg-[#333] transition-colors"

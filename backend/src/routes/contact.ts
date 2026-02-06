@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import prisma from '../db';
+import { sendContactNotification } from '../services/email';
 
 const router = Router();
 
@@ -35,7 +36,17 @@ router.post('/', async (req, res) => {
       }
     });
 
-    // TODO: Send email notification to band
+    // Send email notification to band (non-blocking)
+    sendContactNotification({
+      id: contact.id,
+      type: contact.type,
+      name: contact.name,
+      email: contact.email,
+      subject: contact.subject || undefined,
+      message: contact.message,
+    }).catch((err) => {
+      console.error('Failed to send email notification:', err);
+    });
 
     res.status(201).json({
       success: true,

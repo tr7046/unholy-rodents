@@ -17,6 +17,7 @@ import {
   ArrowTopRightOnSquareIcon,
   ChevronRightIcon,
   EyeIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/24/outline';
 
 // Build version - updated on each deploy to force cache refresh
@@ -24,6 +25,7 @@ const BUILD_VERSION = '2026-01-24-v3';
 
 const navigation = [
   { name: 'Dashboard', href: '/hailsquatan/dashboard', icon: Squares2X2Icon, shortName: 'Dash' },
+  { name: 'Messages', href: '/hailsquatan/messages', icon: EnvelopeIcon, shortName: 'Msgs' },
   { name: 'Products', href: '/hailsquatan/products', icon: ShoppingBagIcon, shortName: 'Merch' },
   { name: 'Shows', href: '/hailsquatan/shows', icon: TicketIcon, shortName: 'Shows' },
   { name: 'Music', href: '/hailsquatan/music', icon: MusicalNoteIcon, shortName: 'Music' },

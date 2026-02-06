@@ -178,7 +178,7 @@ Hail Squatan. Fuck Animal Control. Stay Nuts.
       return false;
     }
 
-    const result = await response.json();
+    const result = (await response.json()) as { id?: string };
     console.log('[Email] Notification sent successfully:', result.id);
     return true;
   } catch (error) {

@@ -27,14 +27,12 @@ export function Footer() {
   const { isVisible } = useVisibility();
   const socials = useSocialLinks();
 
-  // Filter social links based on visibility settings AND having a URL configured
+  // Show social links that have a URL configured
   const socialLinks = useMemo(() => {
     return socialConfig
-      .filter(link =>
-        isVisible(`navigation.footer.socialLinks.${link.visibilityKey}`) && socials[link.key]
-      )
+      .filter(link => socials[link.key])
       .map(link => ({ ...link, href: socials[link.key] }));
-  }, [isVisible, socials]);
+  }, [socials]);
 
   // Filter footer links based on visibility settings (same as header + pages)
   const footerLinks = useMemo(() => {

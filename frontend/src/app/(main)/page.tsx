@@ -341,7 +341,6 @@ export default function HomePage() {
 
       {/* Social Feed Section - only show if at least one social link is configured */}
       {(socials.instagram || socials.facebook || socials.youtube || socials.tiktok) && (
-        <Visible path="sections.home.socialFeed">
           <section className="section bg-void overflow-hidden">
             <div className="container mx-auto px-4">
               <FadeUp>
@@ -442,7 +441,6 @@ export default function HomePage() {
               </FadeUp>
             </div>
           </section>
-        </Visible>
       )}
     </div>
   );

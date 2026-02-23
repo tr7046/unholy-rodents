@@ -62,8 +62,8 @@ export default function MediaPage() {
 
       <div className="divider-slash" />
 
-      {/* Social Links */}
-      <Visible path="sections.media.socialLinks">
+      {/* Social Links - shown if any URLs are configured */}
+      {(socials.instagram || socials.facebook) && (
         <section className="py-12 bg-asphalt-gray">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-display font-bold text-dirty-white mb-6">
@@ -71,17 +71,15 @@ export default function MediaPage() {
             </h2>
             <div className="flex flex-wrap gap-4">
               {socials.instagram && (
-                <Visible path="elements.buttons.mediaInstagramLink">
-                  <a
-                    href={socials.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 text-white font-bold uppercase tracking-wider hover:opacity-80 transition-opacity inline-flex items-center gap-2"
-                  >
-                    <Instagram className="w-5 h-5" />
-                    Instagram
-                  </a>
-                </Visible>
+                <a
+                  href={socials.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 text-white font-bold uppercase tracking-wider hover:opacity-80 transition-opacity inline-flex items-center gap-2"
+                >
+                  <Instagram className="w-5 h-5" />
+                  Instagram
+                </a>
               )}
               {socials.facebook && (
                 <a
@@ -97,7 +95,7 @@ export default function MediaPage() {
             </div>
           </div>
         </section>
-      </Visible>
+      )}
 
       {/* Photos */}
       <Visible path="sections.media.photos">

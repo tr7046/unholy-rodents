@@ -165,8 +165,8 @@ export default function ContactPage() {
                   </StaggerItem>
                 </StaggerContainer>
 
-                {/* Social Links */}
-                <Visible path="sections.contact.socialLinks">
+                {/* Social Links - shown if any URLs are configured */}
+                {(socials.instagram || socials.facebook) && (
                   <FadeUp delay={0.3}>
                     <div className="mt-12">
                       <h3 className="text-lg font-display text-paper mb-6">FOLLOW US</h3>
@@ -202,7 +202,7 @@ export default function ContactPage() {
                       </div>
                     </div>
                   </FadeUp>
-                </Visible>
+                )}
               </div>
             </Visible>
 

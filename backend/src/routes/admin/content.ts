@@ -74,4 +74,43 @@ router.patch('/:key', async (req: Request<{ key: string }>, res: Response) => {
   }
 });
 
+// POST /api/v1/admin/content/:key/append - Atomically append item to a JSON array field
+// Body: { field: "orders", item: { ... } }
+// This avoids the read-modify-write race condition by using a single atomic SQL update
+router.post('/:key/append', async (req: Request<{ key: string }>, res: Response) => {
+  try {
+    const key = req.params.key;
+    const { field, item } = req.body;
+
+    if (!field || !item) {
+      return res.status(400).json({ success: false, error: 'field and item are required' });
+    }
+
+    // Ensure the content row exists with a default structure
+    await prisma.siteContent.upsert({
+      where: { key },
+      update: {},
+      create: { key, value: { [field]: [] } },
+    });
+
+    // Atomically prepend the item to the array using raw SQL
+    // jsonb_set replaces the array at the field path with the new item concatenated with the existing array
+    await prisma.$executeRaw`
+      UPDATE site_content
+      SET value = jsonb_set(
+        value,
+        ${[field]}::text[],
+        (${JSON.stringify(item)}::jsonb || COALESCE(value->${field}, '[]'::jsonb))
+      ),
+      "updatedAt" = NOW()
+      WHERE key = ${key}
+    `;
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error(`[content] POST /${req.params.key}/append failed:`, error);
+    res.status(500).json({ success: false, error: 'Failed to append content' });
+  }
+});
+
 export default router;

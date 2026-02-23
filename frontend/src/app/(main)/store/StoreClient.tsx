@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Package, Shirt, Sticker, Gift, Plus, Minus, ShoppingCart, X, Truck } from 'lucide-react';
+import { ShoppingBag, Package, Shirt, Sticker, Gift, Music, Plus, Minus, ShoppingCart, X, Truck, AlertCircle } from 'lucide-react';
 import {
   StaggerContainer,
   StaggerItem,
@@ -42,9 +42,16 @@ function ProductCard({ product, onSelect }: { product: Product; onSelect: (produ
       {/* Product Image */}
       <div className="aspect-square bg-[#0a0a0a] mb-4 relative overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center">
-          {product.category === 'apparel' && <Shirt className="w-20 h-20 text-[#c41e3a]" />}
-          {product.category === 'accessories' && <Sticker className="w-20 h-20 text-[#c41e3a]" />}
-          {product.category === 'bundles' && <Gift className="w-20 h-20 text-[#c41e3a]" />}
+          {product.images[0] ? (
+            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+          ) : (
+            <>
+              {product.category === 'apparel' && <Shirt className="w-20 h-20 text-[#c41e3a]" />}
+              {product.category === 'accessories' && <Sticker className="w-20 h-20 text-[#c41e3a]" />}
+              {product.category === 'bundles' && <Gift className="w-20 h-20 text-[#c41e3a]" />}
+              {product.category === 'music' && <Music className="w-20 h-20 text-[#c41e3a]" />}
+            </>
+          )}
         </div>
 
         {/* Badges */}
@@ -133,10 +140,17 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
 
         <div className="grid grid-cols-1 tablet:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6">
           {/* Product Image */}
-          <div className="aspect-square bg-[#0a0a0a] flex items-center justify-center relative">
-            {product.category === 'apparel' && <Shirt className="w-32 h-32 text-[#c41e3a]" />}
-            {product.category === 'accessories' && <Sticker className="w-32 h-32 text-[#c41e3a]" />}
-            {product.category === 'bundles' && <Gift className="w-32 h-32 text-[#c41e3a]" />}
+          <div className="aspect-square bg-[#0a0a0a] flex items-center justify-center relative overflow-hidden">
+            {product.images[0] ? (
+              <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+            ) : (
+              <>
+                {product.category === 'apparel' && <Shirt className="w-32 h-32 text-[#c41e3a]" />}
+                {product.category === 'accessories' && <Sticker className="w-32 h-32 text-[#c41e3a]" />}
+                {product.category === 'bundles' && <Gift className="w-32 h-32 text-[#c41e3a]" />}
+                {product.category === 'music' && <Music className="w-32 h-32 text-[#c41e3a]" />}
+              </>
+            )}
           </div>
 
           {/* Product Details */}
@@ -252,6 +266,19 @@ function CartSidebar({ isOpen, onClose, shippingRates }: { isOpen: boolean; onCl
     clearCart,
   } = useCart();
 
+  const [paymentConfigured, setPaymentConfigured] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (isOpen && paymentConfigured === null) {
+      fetch('/api/payment-config')
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => setPaymentConfigured(!!data?.configured))
+        .catch(() => setPaymentConfigured(false));
+    }
+  }, [isOpen, paymentConfigured]);
+
+  const freeShipping = isEligibleForFreeShipping();
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -306,7 +333,7 @@ function CartSidebar({ isOpen, onClose, shippingRates }: { isOpen: boolean; onCl
             {items.length > 0 && (
               <div className="p-6 border-t border-[#2a2a2a] space-y-4">
                 {/* Free shipping progress */}
-                {!isEligibleForFreeShipping() && (
+                {!freeShipping && (
                   <div className="bg-[#0a0a0a] p-3">
                     <p className="text-sm text-[#888888] mb-2">
                       <Truck className="w-4 h-4 inline mr-1" />
@@ -340,7 +367,7 @@ function CartSidebar({ isOpen, onClose, shippingRates }: { isOpen: boolean; onCl
                         {shippingRates.standard.name} ({shippingRates.standard.estimatedDays})
                       </span>
                       <span className="text-[#c41e3a] font-mono">
-                        {isEligibleForFreeShipping() ? 'FREE' : formatPrice(shippingRates.standard.price)}
+                        {freeShipping ? 'FREE' : formatPrice(shippingRates.standard.price)}
                       </span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer">
@@ -355,7 +382,7 @@ function CartSidebar({ isOpen, onClose, shippingRates }: { isOpen: boolean; onCl
                         {shippingRates.express.name} ({shippingRates.express.estimatedDays})
                       </span>
                       <span className="text-[#c41e3a] font-mono">
-                        {formatPrice(shippingRates.express.price)}
+                        {freeShipping ? 'FREE' : formatPrice(shippingRates.express.price)}
                       </span>
                     </label>
                   </div>
@@ -380,13 +407,24 @@ function CartSidebar({ isOpen, onClose, shippingRates }: { isOpen: boolean; onCl
                 </div>
 
                 {/* Checkout button */}
-                <motion.button
-                  className="btn btn-blood w-full"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  Checkout
-                </motion.button>
+                {paymentConfigured === false ? (
+                  <div className="bg-[#0a0a0a] border border-[#333] p-3 text-center">
+                    <AlertCircle className="w-5 h-5 text-[#888888] mx-auto mb-1" />
+                    <p className="text-sm text-[#888888]">Checkout coming soon</p>
+                  </div>
+                ) : (
+                  <motion.button
+                    className="btn btn-blood w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                    whileHover={paymentConfigured ? { scale: 1.02 } : {}}
+                    whileTap={paymentConfigured ? { scale: 0.98 } : {}}
+                    disabled={!paymentConfigured}
+                    onClick={() => {
+                      // TODO: Implement checkout flow with configured payment provider
+                    }}
+                  >
+                    {paymentConfigured === null ? 'Loading...' : 'Checkout'}
+                  </motion.button>
+                )}
 
                 <button
                   onClick={clearCart}
@@ -452,8 +490,13 @@ function CartItemCard({
 export default function StoreClient({ products, shippingRates }: StoreClientProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'apparel' | 'accessories' | 'bundles'>('all');
-  const { getItemCount } = useCart();
+  const [filter, setFilter] = useState<'all' | Product['category']>('all');
+  const { getItemCount, setShippingRates } = useCart();
+
+  // Sync shipping rates from server into cart store
+  useEffect(() => {
+    setShippingRates(shippingRates);
+  }, [shippingRates, setShippingRates]);
 
   const filteredProducts = filter === 'all'
     ? products
@@ -510,7 +553,7 @@ export default function StoreClient({ products, shippingRates }: StoreClientProp
             {/* Category filters */}
             <Visible path="sections.store.filters">
               <div className="flex flex-wrap gap-2">
-                {(['all', 'apparel', 'accessories', 'bundles'] as const).map((cat) => (
+                {(['all', 'apparel', 'accessories', 'bundles', 'music'] as const).map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setFilter(cat)}

@@ -1,12 +1,27 @@
-import { promises as fs } from 'fs';
-import path from 'path';
 import StoreClient from './StoreClient';
-import type { ProductsData } from '@/lib/products';
+import type { ProductsData, ShippingRates } from '@/lib/products';
+import { shippingRates as defaultShippingRates } from '@/lib/products';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 async function getProductsData(): Promise<ProductsData> {
-  const filePath = path.join(process.cwd(), 'data', 'products.json');
-  const content = await fs.readFile(filePath, 'utf-8');
-  return JSON.parse(content);
+  try {
+    const response = await fetch(`${API_URL}/content/products`, {
+      next: { revalidate: 60 },
+    });
+
+    if (!response.ok) {
+      return { products: [], shippingRates: defaultShippingRates };
+    }
+
+    const data = await response.json();
+    return {
+      products: Array.isArray(data?.products) ? data.products : [],
+      shippingRates: data?.shippingRates || defaultShippingRates,
+    };
+  } catch {
+    return { products: [], shippingRates: defaultShippingRates };
+  }
 }
 
 export default async function StorePage() {

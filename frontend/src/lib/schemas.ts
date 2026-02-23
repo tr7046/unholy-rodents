@@ -69,6 +69,8 @@ export const ShowSchema = z.object({
 export const TrackSchema = z.object({
   title: z.string().min(1, 'Track title required'),
   duration: z.string(),
+  audioUrl: z.string().optional(),
+  lyrics: z.string().optional(),
 });
 
 export const StreamingLinkSchema = z.object({
@@ -84,6 +86,9 @@ export const ReleaseSchema = z.object({
   coverArt: z.string(),
   tracks: z.array(TrackSchema),
   streamingLinks: z.array(StreamingLinkSchema),
+  slug: z.string().optional(),
+  visibility: z.enum(['public', 'unlisted', 'private']).optional(),
+  password: z.string().optional(),
 });
 
 // ============================================
@@ -197,8 +202,10 @@ export const OrderUpdateSchema = z.object({
 // ============================================
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+export const MAX_AUDIO_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-export const ALLOWED_FOLDERS = ['products', 'members', 'media'] as const;
+export const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/aac', 'audio/mp4', 'audio/x-m4a'];
+export const ALLOWED_FOLDERS = ['products', 'members', 'media', 'music'] as const;
 
 export const UploadFolderSchema = z.enum(ALLOWED_FOLDERS);
 

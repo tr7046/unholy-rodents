@@ -44,13 +44,13 @@ async function getContentFromBackend(): Promise<ShowsData> {
   }
 }
 
-async function saveContentToBackend(data: ShowsData, token: string): Promise<boolean> {
+async function saveContentToBackend(data: ShowsData): Promise<boolean> {
   try {
     const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
       },
       body: JSON.stringify({ value: data }),
     });
@@ -93,7 +93,6 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
 
     const newShow: Show = {
       ...showValidation.data,
@@ -106,7 +105,7 @@ export async function POST(request: NextRequest) {
       data.pastShows.push(newShow);
     }
 
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
     return NextResponse.json(newShow, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -132,7 +131,6 @@ export async function PUT(request: NextRequest) {
 
     const show = showValidation.data;
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
 
     const list = typeValidation.data === 'upcoming' ? data.upcomingShows : data.pastShows;
     const index = list.findIndex((s) => s.id === show.id);
@@ -142,7 +140,7 @@ export async function PUT(request: NextRequest) {
     }
 
     list[index] = show as Show;
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
 
     return NextResponse.json(show);
   } catch {
@@ -165,7 +163,6 @@ export async function DELETE(request: NextRequest) {
     }
 
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
 
     if (type === 'upcoming') {
       data.upcomingShows = data.upcomingShows.filter((s) => s.id !== id);
@@ -173,7 +170,7 @@ export async function DELETE(request: NextRequest) {
       data.pastShows = data.pastShows.filter((s) => s.id !== id);
     }
 
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -39,13 +39,13 @@ async function getContentFromBackend(): Promise<OrdersData> {
   }
 }
 
-async function saveContentToBackend(data: OrdersData, token: string): Promise<boolean> {
+async function saveContentToBackend(data: OrdersData): Promise<boolean> {
   try {
     const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
       },
       body: JSON.stringify({ value: data }),
     });
@@ -81,9 +81,6 @@ export async function POST(request: NextRequest) {
     }
 
     const order = validation.data;
-    const data = await getContentFromBackend();
-    // For public order creation, we don't have admin token - use empty string
-    const token = request.cookies.get('admin_token')?.value || '';
 
     const newOrder: Order = {
       ...order,
@@ -93,8 +90,19 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     };
 
-    data.orders.unshift(newOrder);
-    await saveContentToBackend(data, token);
+    // Use atomic append to avoid read-modify-write race condition
+    const appendRes = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}/append`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
+      },
+      body: JSON.stringify({ field: 'orders', item: newOrder }),
+    });
+
+    if (!appendRes.ok) {
+      return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+    }
 
     return NextResponse.json(newOrder, { status: 201 });
   } catch {
@@ -117,7 +125,6 @@ export async function PUT(request: NextRequest) {
 
     const { id, status, trackingNumber } = validation.data;
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
 
     const index = data.orders.findIndex((o) => o.id === id);
     if (index === -1) {
@@ -131,7 +138,7 @@ export async function PUT(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     };
 
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
     return NextResponse.json(data.orders[index]);
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -4,14 +4,24 @@ import { isAuthenticated } from '@/lib/auth';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 const CONTENT_KEY = 'music';
 
+interface Track {
+  title: string;
+  duration: string;
+  audioUrl?: string;
+  lyrics?: string;
+}
+
 interface Release {
   id: string;
   title: string;
   type: 'album' | 'ep' | 'single';
   releaseDate: string;
   coverArt: string;
-  tracks: { title: string; duration: string }[];
+  tracks: Track[];
   streamingLinks: { platform: string; url: string }[];
+  slug?: string;
+  visibility?: 'public' | 'unlisted' | 'private';
+  password?: string;
 }
 
 interface MusicData {
@@ -26,6 +36,13 @@ const defaultData: MusicData = {
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 // Disable caching for dynamic data
@@ -48,13 +65,13 @@ async function getContentFromBackend(): Promise<MusicData> {
   }
 }
 
-async function saveContentToBackend(data: MusicData, token: string): Promise<boolean> {
+async function saveContentToBackend(data: MusicData): Promise<boolean> {
   try {
     const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
       },
       body: JSON.stringify({ value: data }),
     });
@@ -87,15 +104,23 @@ export async function POST(request: NextRequest) {
 
     const release = await request.json();
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
+
+    // Ensure slug is unique
+    let slug = release.slug || generateSlug(release.title);
+    const existingSlugs = data.releases.map((r) => r.slug);
+    if (existingSlugs.includes(slug)) {
+      slug = `${slug}-${Date.now().toString(36)}`;
+    }
 
     const newRelease: Release = {
       ...release,
       id: generateId(),
+      slug,
+      visibility: release.visibility || 'public',
     };
 
-    data.releases.push(newRelease);
-    await saveContentToBackend(data, token);
+    data.releases.unshift(newRelease);
+    await saveContentToBackend(data);
 
     return NextResponse.json(newRelease, { status: 201 });
   } catch {
@@ -111,12 +136,11 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
 
     // Handle streaming platforms update
     if (body.streamingPlatforms) {
       data.streamingPlatforms = body.streamingPlatforms;
-      await saveContentToBackend(data, token);
+      await saveContentToBackend(data);
       return NextResponse.json(data);
     }
 
@@ -127,8 +151,16 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
     }
 
+    // Check slug uniqueness (excluding current release)
+    if (release.slug) {
+      const duplicateSlug = data.releases.find((r, i) => i !== index && r.slug === release.slug);
+      if (duplicateSlug) {
+        release.slug = `${release.slug}-${Date.now().toString(36)}`;
+      }
+    }
+
     data.releases[index] = release;
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
 
     return NextResponse.json(release);
   } catch {
@@ -150,9 +182,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
     data.releases = data.releases.filter((r) => r.id !== id);
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
 
     return NextResponse.json({ success: true });
   } catch {

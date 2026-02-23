@@ -18,6 +18,7 @@ import {
   ChevronRightIcon,
   EyeIcon,
   EnvelopeIcon,
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 
 // Build version - updated on each deploy to force cache refresh
@@ -34,6 +35,7 @@ const navigation = [
   { name: 'Homepage', href: '/hailsquatan/homepage', icon: HomeIcon, shortName: 'Home' },
   { name: 'Orders', href: '/hailsquatan/orders', icon: ClipboardDocumentListIcon, shortName: 'Orders' },
   { name: 'Visibility', href: '/hailsquatan/visibility', icon: EyeIcon, shortName: 'Vis' },
+  { name: 'Settings', href: '/hailsquatan/settings', icon: Cog6ToothIcon, shortName: 'Config' },
 ];
 
 // Quick access items for mobile bottom bar (most used)

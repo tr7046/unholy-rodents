@@ -70,13 +70,13 @@ async function getContentFromBackend(): Promise<HomepageData> {
   }
 }
 
-async function saveContentToBackend(data: HomepageData, token: string): Promise<boolean> {
+async function saveContentToBackend(data: HomepageData): Promise<boolean> {
   try {
     const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
       },
       body: JSON.stringify({ value: data }),
     });
@@ -109,7 +109,6 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
 
     const updatedData: HomepageData = {
       hero: body.hero || data.hero,
@@ -117,7 +116,7 @@ export async function PUT(request: NextRequest) {
       featuredRelease: body.featuredRelease || data.featuredRelease,
     };
 
-    await saveContentToBackend(updatedData, token);
+    await saveContentToBackend(updatedData);
     return NextResponse.json(updatedData);
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

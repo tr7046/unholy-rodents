@@ -53,13 +53,13 @@ async function getContentFromBackend(): Promise<AboutData> {
   }
 }
 
-async function saveContentToBackend(data: AboutData, token: string): Promise<boolean> {
+async function saveContentToBackend(data: AboutData): Promise<boolean> {
   try {
     const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
       },
       body: JSON.stringify({ value: data }),
     });
@@ -93,9 +93,6 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const data = await getContentFromBackend();
 
-    // Get auth token from cookies
-    const token = request.cookies.get('admin_token')?.value || '';
-
     // Handle member operations
     if (body.action === 'addMember') {
       const newMember: Member = {
@@ -103,7 +100,7 @@ export async function PUT(request: NextRequest) {
         id: generateId(),
       };
       data.members.push(newMember);
-      await saveContentToBackend(data, token);
+      await saveContentToBackend(data);
       return NextResponse.json(newMember);
     }
 
@@ -111,14 +108,14 @@ export async function PUT(request: NextRequest) {
       const index = data.members.findIndex((m) => m.id === body.member.id);
       if (index !== -1) {
         data.members[index] = body.member;
-        await saveContentToBackend(data, token);
+        await saveContentToBackend(data);
       }
       return NextResponse.json(body.member);
     }
 
     if (body.action === 'deleteMember') {
       data.members = data.members.filter((m) => m.id !== body.memberId);
-      await saveContentToBackend(data, token);
+      await saveContentToBackend(data);
       return NextResponse.json({ success: true });
     }
 
@@ -130,7 +127,7 @@ export async function PUT(request: NextRequest) {
       bio: body.bio || data.bio,
     };
 
-    await saveContentToBackend(updatedData, token);
+    await saveContentToBackend(updatedData);
     return NextResponse.json(updatedData);
   } catch (error) {
     console.error('[about] PUT failed:', error);

@@ -61,3 +61,22 @@ export const requireAdmin = (
   }
   next();
 };
+
+// Middleware that accepts either JWT auth OR an internal API key (for server-to-server calls)
+export const authenticateInternal = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  // Check internal API key first (used by Next.js server-to-server calls)
+  // Reuses JWT_SECRET so no extra env var is needed on the backend
+  const apiKey = req.headers['x-internal-api-key'] as string;
+  const expectedKey = process.env.JWT_SECRET;
+
+  if (expectedKey && apiKey === expectedKey) {
+    return next();
+  }
+
+  // Fall back to JWT auth
+  return authenticate(req, res, next);
+};

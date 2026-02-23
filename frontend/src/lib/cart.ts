@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Product, ProductVariant, calculateShipping, shippingRates } from './products';
+import { Product, ProductVariant, ShippingRates, shippingRates as defaultShippingRates } from './products';
 
 // ============================================
 // CART TYPES
@@ -15,18 +15,21 @@ export interface CartItem {
   variantName: string;
   price: number;
   quantity: number;
+  maxStock: number;
   image: string;
 }
 
 interface CartState {
   items: CartItem[];
   shippingMethod: 'standard' | 'express';
+  shippingRates: ShippingRates;
 
   // Actions
   addItem: (product: Product, variant: ProductVariant, quantity?: number) => void;
   removeItem: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
   setShippingMethod: (method: 'standard' | 'express') => void;
+  setShippingRates: (rates: ShippingRates) => void;
   clearCart: () => void;
 
   // Computed (as functions since Zustand doesn't support getters well)
@@ -47,6 +50,7 @@ export const useCart = create<CartState>()(
     (set, get) => ({
       items: [],
       shippingMethod: 'standard',
+      shippingRates: defaultShippingRates,
 
       addItem: (product, variant, quantity = 1) => {
         set((state) => {
@@ -74,6 +78,7 @@ export const useCart = create<CartState>()(
                 variantName: variant.name,
                 price: variant.price,
                 quantity: Math.min(quantity, variant.stock),
+                maxStock: variant.stock,
                 image: product.images[0] || '/merch/placeholder.jpg',
               },
             ],
@@ -94,7 +99,9 @@ export const useCart = create<CartState>()(
           }
           return {
             items: state.items.map(item =>
-              item.variantId === variantId ? { ...item, quantity } : item
+              item.variantId === variantId
+                ? { ...item, quantity: Math.min(quantity, item.maxStock) }
+                : item
             ),
           };
         });
@@ -102,6 +109,10 @@ export const useCart = create<CartState>()(
 
       setShippingMethod: (method) => {
         set({ shippingMethod: method });
+      },
+
+      setShippingRates: (rates) => {
+        set({ shippingRates: rates });
       },
 
       clearCart: () => {
@@ -114,9 +125,12 @@ export const useCart = create<CartState>()(
       },
 
       getShipping: () => {
-        const { shippingMethod } = get();
+        const { shippingMethod, shippingRates } = get();
         const subtotal = get().getSubtotal();
-        return calculateShipping(subtotal, shippingMethod);
+        if (subtotal >= shippingRates.freeShippingThreshold) {
+          return 0;
+        }
+        return shippingRates[shippingMethod].price;
       },
 
       getTotal: () => {
@@ -129,10 +143,12 @@ export const useCart = create<CartState>()(
       },
 
       isEligibleForFreeShipping: () => {
+        const { shippingRates } = get();
         return get().getSubtotal() >= shippingRates.freeShippingThreshold;
       },
 
       amountUntilFreeShipping: () => {
+        const { shippingRates } = get();
         const subtotal = get().getSubtotal();
         const remaining = shippingRates.freeShippingThreshold - subtotal;
         return remaining > 0 ? remaining : 0;

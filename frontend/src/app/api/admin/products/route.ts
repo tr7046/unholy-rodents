@@ -20,9 +20,9 @@ interface ProductsData {
 const defaultData: ProductsData = {
   products: [],
   shippingRates: {
-    standard: { name: 'Standard Shipping', price: 5.99, estimatedDays: '5-7' },
-    express: { name: 'Express Shipping', price: 12.99, estimatedDays: '2-3' },
-    freeShippingThreshold: 50,
+    standard: { name: 'Standard Shipping', price: 599, estimatedDays: '5-7 business days' },
+    express: { name: 'Express Shipping', price: 1299, estimatedDays: '2-3 business days' },
+    freeShippingThreshold: 7500,
   },
 };
 
@@ -50,13 +50,13 @@ async function getContentFromBackend(): Promise<ProductsData> {
   }
 }
 
-async function saveContentToBackend(data: ProductsData, token: string): Promise<boolean> {
+async function saveContentToBackend(data: ProductsData): Promise<boolean> {
   try {
     const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
       },
       body: JSON.stringify({ value: data }),
     });
@@ -96,7 +96,6 @@ export async function POST(request: NextRequest) {
 
     const product = validation.data;
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
 
     const newProduct: Product = {
       ...product,
@@ -108,7 +107,7 @@ export async function POST(request: NextRequest) {
     };
 
     data.products.push(newProduct);
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
 
     return NextResponse.json(newProduct, { status: 201 });
   } catch {
@@ -131,7 +130,6 @@ export async function PUT(request: NextRequest) {
 
     const product = validation.data;
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
 
     const index = data.products.findIndex((p) => p.id === product.id);
     if (index === -1) {
@@ -139,7 +137,7 @@ export async function PUT(request: NextRequest) {
     }
 
     data.products[index] = product as Product;
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
 
     return NextResponse.json(product);
   } catch {
@@ -161,9 +159,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
     data.products = data.products.filter((p) => p.id !== id);
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
 
     return NextResponse.json({ success: true });
   } catch {

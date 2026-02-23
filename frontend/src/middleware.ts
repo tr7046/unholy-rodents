@@ -16,6 +16,7 @@ const PROTECTED_ADMIN_ROUTES = [
   '/hailsquatan/homepage',
   '/hailsquatan/orders',
   '/hailsquatan/visibility',
+  '/hailsquatan/settings',
 ];
 
 // Public pages that can be disabled via visibility settings

@@ -7,22 +7,22 @@ import subscribersRouter from './subscribers';
 import messagesRouter from './messages';
 import contentRouter from './content';
 import uploadRouter from './upload';
-import { authenticate } from '../../middleware/auth';
+import paymentConfigRouter from './payment-config';
+import { authenticate, authenticateInternal } from '../../middleware/auth';
 
 const router = Router();
 
 // Auth routes (no authentication required)
 router.use('/auth', authRouter);
 
-// Protected routes (authentication required)
-router.use('/shows', authenticate, showsRouter);
-router.use('/releases', authenticate, releasesRouter);
-router.use('/media', authenticate, mediaRouter);
-router.use('/subscribers', authenticate, subscribersRouter);
-router.use('/messages', authenticate, messagesRouter);
-router.use('/upload', authenticate, uploadRouter);
-
-// Content routes - frontend handles auth via session cookie
-router.use('/content', contentRouter);
+// Protected routes - accepts JWT or internal API key (frontend server-to-server)
+router.use('/shows', authenticateInternal, showsRouter);
+router.use('/releases', authenticateInternal, releasesRouter);
+router.use('/media', authenticateInternal, mediaRouter);
+router.use('/subscribers', authenticateInternal, subscribersRouter);
+router.use('/messages', authenticateInternal, messagesRouter);
+router.use('/upload', authenticateInternal, uploadRouter);
+router.use('/payment-config', authenticateInternal, paymentConfigRouter);
+router.use('/content', authenticateInternal, contentRouter);
 
 export default router;

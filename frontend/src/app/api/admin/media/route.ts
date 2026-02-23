@@ -49,13 +49,13 @@ async function getContentFromBackend(): Promise<MediaData> {
   }
 }
 
-async function saveContentToBackend(data: MediaData, token: string): Promise<boolean> {
+async function saveContentToBackend(data: MediaData): Promise<boolean> {
   try {
     const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
       },
       body: JSON.stringify({ value: data }),
     });
@@ -88,7 +88,6 @@ export async function POST(request: NextRequest) {
 
     const { item, type } = await request.json();
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
 
     const newItem: MediaItem = {
       ...item,
@@ -104,7 +103,7 @@ export async function POST(request: NextRequest) {
       data.flyers.push(newItem);
     }
 
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
     return NextResponse.json(newItem, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -126,9 +125,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
     data[type] = data[type].filter((item) => item.id !== id);
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
 
     return NextResponse.json({ success: true });
   } catch {

@@ -6,6 +6,11 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+const internalHeaders = () => ({
+  'Content-Type': 'application/json',
+  'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
+});
+
 export async function GET(request: NextRequest) {
   try {
     if (!(await isAuthenticated())) {
@@ -13,12 +18,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const token = request.cookies.get('admin_token')?.value || '';
 
     const response = await fetch(`${API_URL}/admin/messages?${searchParams}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: internalHeaders(),
       cache: 'no-store',
     });
 
@@ -40,14 +42,10 @@ export async function PATCH(request: NextRequest) {
 
     const body = await request.json();
     const { id, ...data } = body;
-    const token = request.cookies.get('admin_token')?.value || '';
 
     const response = await fetch(`${API_URL}/admin/messages/${id}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: internalHeaders(),
       body: JSON.stringify(data),
     });
 
@@ -66,7 +64,6 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    const token = request.cookies.get('admin_token')?.value || '';
 
     if (!id) {
       return NextResponse.json({ error: 'Message ID required' }, { status: 400 });
@@ -74,9 +71,7 @@ export async function DELETE(request: NextRequest) {
 
     const response = await fetch(`${API_URL}/admin/messages/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: internalHeaders(),
     });
 
     const result = await response.json();

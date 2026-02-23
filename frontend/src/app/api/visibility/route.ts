@@ -35,13 +35,13 @@ async function getContentFromBackend(): Promise<VisibilityData> {
   }
 }
 
-async function saveContentToBackend(data: VisibilityData, token: string): Promise<boolean> {
+async function saveContentToBackend(data: VisibilityData): Promise<boolean> {
   try {
     const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
       },
       body: JSON.stringify({ value: data }),
     });
@@ -80,14 +80,12 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid visibility config structure' }, { status: 400 });
     }
 
-    const token = request.cookies.get('admin_token')?.value || '';
-
     const data: VisibilityData = {
       config: body as VisibilityConfig,
       updatedAt: new Date().toISOString(),
     };
 
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
 
     return NextResponse.json({ success: true, config: data.config });
   } catch (error) {
@@ -112,7 +110,6 @@ export async function PATCH(request: NextRequest) {
 
     // Get current config
     const data = await getContentFromBackend();
-    const token = request.cookies.get('admin_token')?.value || '';
 
     // Update the specific path
     const parts = path.split('.');
@@ -133,7 +130,7 @@ export async function PATCH(request: NextRequest) {
     current[lastKey] = value;
     data.updatedAt = new Date().toISOString();
 
-    await saveContentToBackend(data, token);
+    await saveContentToBackend(data);
 
     return NextResponse.json({ success: true, path, value });
   } catch (error) {

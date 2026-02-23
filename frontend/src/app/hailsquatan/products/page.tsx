@@ -39,6 +39,10 @@ interface ProductsData {
   };
 }
 
+function generateTempId(): string {
+  return `new-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
 const defaultProduct: Omit<Product, 'id'> = {
   name: '',
   slug: '',
@@ -47,7 +51,7 @@ const defaultProduct: Omit<Product, 'id'> = {
   images: [],
   featured: false,
   tags: [],
-  variants: [{ id: '', name: '', price: 0, stock: 0 }],
+  variants: [{ id: generateTempId(), name: '', price: 0, stock: 0 }],
 };
 
 export default function ProductsAdminPage() {
@@ -246,7 +250,7 @@ function ProductModal({
   function addVariant() {
     setFormData((prev) => ({
       ...prev,
-      variants: [...prev.variants, { id: '', name: '', price: 0, stock: 0 }],
+      variants: [...prev.variants, { id: generateTempId(), name: '', price: 0, stock: 0 }],
     }));
   }
 

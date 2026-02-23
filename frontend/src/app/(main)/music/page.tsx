@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Music, Play, ExternalLink } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   FadeUp,
   SlideIn,
@@ -11,6 +12,14 @@ import {
   MagneticHover,
 } from '@/components/animations';
 import { Visible } from '@/contexts/VisibilityContext';
+import { playAlbum, type PlayerTrack } from '@/components/AudioPlayer';
+
+interface Track {
+  title: string;
+  duration: string;
+  audioUrl?: string;
+  lyrics?: string;
+}
 
 interface Release {
   id: string;
@@ -18,8 +27,9 @@ interface Release {
   type: 'album' | 'ep' | 'single';
   releaseDate: string;
   coverArt: string;
-  tracks: { title: string; duration: string }[];
+  tracks: Track[];
   streamingLinks: { platform: string; url: string }[];
+  slug?: string;
 }
 
 interface MusicData {
@@ -50,6 +60,22 @@ export default function MusicPage() {
   const streamingPlatforms = data?.streamingPlatforms || [];
   const releases = data?.releases || [];
   const latestRelease = releases[0];
+
+  function handlePlayRelease(release: Release) {
+    const playableTracks: PlayerTrack[] = release.tracks
+      .filter((t) => t.audioUrl)
+      .map((t) => ({
+        title: t.title,
+        audioUrl: t.audioUrl!,
+        duration: t.duration,
+        releaseTitle: release.title,
+        coverArt: release.coverArt,
+      }));
+
+    if (playableTracks.length > 0) {
+      playAlbum(playableTracks, 0);
+    }
+  }
 
   return (
     <div className="relative pt-20">
@@ -104,34 +130,42 @@ export default function MusicPage() {
 
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <SlideIn direction="left">
-                <div className="relative group">
-                  <motion.div
-                    className="aspect-square bg-void border-4 border-blood flex items-center justify-center relative overflow-hidden"
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {latestRelease?.coverArt ? (
-                      <img src={latestRelease.coverArt} alt={latestRelease.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="halftone absolute inset-0 flex items-center justify-center">
-                        <Music className="w-32 h-32 text-blood" />
-                      </div>
-                    )}
-
-                    {/* Hover play overlay */}
+                <Link href={latestRelease?.slug ? `/music/releases/${latestRelease.slug}` : '#'}>
+                  <div className="relative group">
                     <motion.div
-                      className="absolute inset-0 bg-blood/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      className="aspect-square bg-void border-4 border-blood flex items-center justify-center relative overflow-hidden"
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.3 }}
                     >
-                      <motion.div
-                        whileHover={{ scale: 1.2 }}
-                        className="w-24 h-24 rounded-full bg-paper flex items-center justify-center cursor-pointer"
-                      >
-                        <Play className="w-12 h-12 text-blood ml-1" />
-                      </motion.div>
+                      {latestRelease?.coverArt ? (
+                        <img src={latestRelease.coverArt} alt={latestRelease.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="halftone absolute inset-0 flex items-center justify-center">
+                          <Music className="w-32 h-32 text-blood" />
+                        </div>
+                      )}
+
+                      {/* Hover play overlay */}
+                      {latestRelease?.tracks.some((t) => t.audioUrl) && (
+                        <motion.div
+                          className="absolute inset-0 bg-blood/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (latestRelease) handlePlayRelease(latestRelease);
+                          }}
+                        >
+                          <motion.div
+                            whileHover={{ scale: 1.2 }}
+                            className="w-24 h-24 rounded-full bg-paper flex items-center justify-center cursor-pointer"
+                          >
+                            <Play className="w-12 h-12 text-blood ml-1" />
+                          </motion.div>
+                        </motion.div>
+                      )}
                     </motion.div>
-                  </motion.div>
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blood" />
-                </div>
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blood" />
+                  </div>
+                </Link>
               </SlideIn>
 
               <SlideIn direction="right">
@@ -144,7 +178,13 @@ export default function MusicPage() {
                     {latestRelease ? latestRelease.type.toUpperCase() : 'Coming Soon'}
                   </motion.span>
                   <h3 className="text-4xl md:text-5xl font-display text-paper mb-4">
-                    {latestRelease?.title || 'NEW MUSIC'}
+                    {latestRelease ? (
+                      <Link href={latestRelease.slug ? `/music/releases/${latestRelease.slug}` : '#'} className="hover:text-blood transition-colors">
+                        {latestRelease.title}
+                      </Link>
+                    ) : (
+                      'NEW MUSIC'
+                    )}
                   </h3>
                   <p className="text-concrete mb-8 text-lg">
                     {latestRelease
@@ -196,18 +236,35 @@ export default function MusicPage() {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {releases.map((release) => (
                   <FadeUp key={release.id}>
-                    <div className="card">
-                      <div className="aspect-square bg-charcoal mb-4 flex items-center justify-center overflow-hidden">
-                        {release.coverArt ? (
-                          <img src={release.coverArt} alt={release.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <Music className="w-16 h-16 text-blood" />
-                        )}
+                    <Link href={release.slug ? `/music/releases/${release.slug}` : '#'}>
+                      <div className="card group cursor-pointer">
+                        <div className="aspect-square bg-charcoal mb-4 flex items-center justify-center overflow-hidden relative">
+                          {release.coverArt ? (
+                            <img src={release.coverArt} alt={release.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <Music className="w-16 h-16 text-blood" />
+                          )}
+
+                          {/* Play overlay */}
+                          {release.tracks.some((t) => t.audioUrl) && (
+                            <div
+                              className="absolute inset-0 bg-blood/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePlayRelease(release);
+                              }}
+                            >
+                              <div className="w-16 h-16 rounded-full bg-paper flex items-center justify-center">
+                                <Play className="w-8 h-8 text-blood ml-0.5" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <span className="tag mb-2 inline-block text-xs">{release.type}</span>
+                        <h3 className="text-xl font-display text-paper mb-1 group-hover:text-blood transition-colors">{release.title}</h3>
+                        <p className="text-concrete text-sm">{release.tracks.length} tracks</p>
                       </div>
-                      <span className="tag mb-2 inline-block text-xs">{release.type}</span>
-                      <h3 className="text-xl font-display text-paper mb-1">{release.title}</h3>
-                      <p className="text-concrete text-sm">{release.tracks.length} tracks</p>
-                    </div>
+                    </Link>
                   </FadeUp>
                 ))}
               </div>

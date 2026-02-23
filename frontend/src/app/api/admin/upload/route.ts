@@ -54,6 +54,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
+    // Determine resource type and size limit based on file type
+    const isAudio = file.type.startsWith('audio/');
+    const maxSize = isAudio ? 50 * 1024 * 1024 : 5 * 1024 * 1024; // 50MB audio, 5MB images
+
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        { error: `File too large. Max ${isAudio ? '50MB' : '5MB'}` },
+        { status: 400 }
+      );
+    }
+
     // Convert to base64 data URL (works on Vercel unlike upload_stream)
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -62,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     const result = await cloudinary.uploader.upload(dataUrl, {
       folder: `unholy-rodents/${folder}`,
-      resource_type: 'auto',
+      resource_type: isAudio ? 'video' : 'auto', // Cloudinary uses 'video' for audio
     });
 
     return NextResponse.json({ url: result.secure_url });

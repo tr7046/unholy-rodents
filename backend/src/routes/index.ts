@@ -6,6 +6,7 @@ import membersRouter from './members';
 import contactRouter from './contact';
 import subscribeRouter from './subscribe';
 import contentRouter from './content';
+import analyticsRouter from './analytics';
 import adminRouter from './admin';
 import { prisma } from '../db';
 
@@ -19,6 +20,7 @@ router.use('/members', membersRouter);
 router.use('/contact', contactRouter);
 router.use('/subscribe', subscribeRouter);
 router.use('/content', contentRouter);
+router.use('/analytics', analyticsRouter);
 
 // Public payment config (publishable keys only — no secrets)
 router.get('/payment-config/public', async (_req, res) => {

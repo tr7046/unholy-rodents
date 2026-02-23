@@ -12,6 +12,7 @@ import {
   Squares2X2Icon,
   ArrowLeftIcon,
   EnvelopeIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 const allSections = {
@@ -24,6 +25,7 @@ const allSections = {
   media: { name: 'Media', href: '/hailsquatan/media', icon: PhotoIcon },
   homepage: { name: 'Homepage', href: '/hailsquatan/homepage', icon: HomeIcon },
   orders: { name: 'Orders', href: '/hailsquatan/orders', icon: ClipboardDocumentListIcon },
+  analytics: { name: 'Analytics', href: '/hailsquatan/analytics', icon: ChartBarIcon },
 };
 
 interface QuickNavProps {

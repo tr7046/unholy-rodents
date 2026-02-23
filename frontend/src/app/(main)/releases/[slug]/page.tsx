@@ -11,6 +11,7 @@ import {
 import { playAlbum, playTrack, type PlayerTrack } from '@/components/AudioPlayer';
 
 interface Track {
+  id?: string;
   title: string;
   duration: string;
   audioUrl?: string;
@@ -40,9 +41,14 @@ export default function ReleasePage({ params }: { params: Promise<{ slug: string
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState(false);
   const [expandedLyrics, setExpandedLyrics] = useState<number | null>(null);
+  const [playCounts, setPlayCounts] = useState<{ tracks: Record<string, number>; releases: Record<string, number> }>({ tracks: {}, releases: {} });
 
   useEffect(() => {
     fetchRelease();
+    fetch('/api/public/analytics')
+      .then(res => res.json())
+      .then(setPlayCounts)
+      .catch(() => {});
   }, [slug]);
 
   async function fetchRelease(pw?: string) {
@@ -95,6 +101,8 @@ export default function ReleasePage({ params }: { params: Promise<{ slug: string
         duration: t.duration,
         releaseTitle: release.title,
         coverArt: release.coverArt,
+        trackId: t.id,
+        releaseId: release.id,
       }));
 
     // Find the index in the playable list
@@ -129,6 +137,8 @@ export default function ReleasePage({ params }: { params: Promise<{ slug: string
         duration: t.duration,
         releaseTitle: release.title,
         coverArt: release.coverArt,
+        trackId: t.id,
+        releaseId: release.id,
       }));
 
     if (playableTracks.length > 0) {
@@ -283,9 +293,12 @@ export default function ReleasePage({ params }: { params: Promise<{ slug: string
                   </div>
                 )}
 
-                {/* Track count */}
+                {/* Track count + plays */}
                 <p className="text-concrete text-sm">
                   {release.tracks.length} {release.tracks.length === 1 ? 'track' : 'tracks'}
+                  {release.id && (playCounts.releases[release.id] || 0) > 0 && (
+                    <span className="ml-2 text-concrete/60">&middot; {playCounts.releases[release.id].toLocaleString()} plays</span>
+                  )}
                 </p>
               </div>
             </FadeUp>
@@ -343,6 +356,11 @@ export default function ReleasePage({ params }: { params: Promise<{ slug: string
                         )}
                         Lyrics
                       </button>
+                    )}
+
+                    {/* Play count */}
+                    {track.id && (playCounts.tracks[track.id] || 0) > 0 && (
+                      <span className="text-concrete/50 text-xs tabular-nums">{playCounts.tracks[track.id].toLocaleString()}</span>
                     )}
 
                     {/* Duration */}

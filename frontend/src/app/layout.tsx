@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk, Anton, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
+import Analytics from '@/components/Analytics';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -113,6 +114,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
+        <Analytics />
         {children}
       </body>
     </html>

@@ -28,6 +28,18 @@ const limiter = rateLimit({
   legacyHeaders: false,
   validate: false, // Disable validation to work behind Railway proxy
 });
+
+// Higher rate limit for analytics (fires on every page view / track play)
+const analyticsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  message: { success: false, error: 'Too many requests.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+});
+
+app.use('/api/v1/analytics', analyticsLimiter);
 app.use('/api', limiter);
 
 // Serve static files from uploads directory

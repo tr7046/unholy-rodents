@@ -12,6 +12,7 @@ import {
   XMarkIcon,
   QueueListIcon,
 } from '@heroicons/react/24/solid';
+import { trackPlay } from './Analytics';
 
 export interface PlayerTrack {
   title: string;
@@ -19,6 +20,8 @@ export interface PlayerTrack {
   duration: string;
   releaseTitle: string;
   coverArt: string;
+  trackId?: string;
+  releaseId?: string;
 }
 
 interface AudioPlayerState {
@@ -165,6 +168,13 @@ export default function AudioPlayer() {
 
     if (state.isPlaying) {
       howl.play();
+      // Record listen event for analytics
+      trackPlay({
+        trackId: currentTrack.trackId || currentTrack.audioUrl,
+        trackName: currentTrack.title,
+        releaseId: currentTrack.releaseId,
+        releaseName: currentTrack.releaseTitle,
+      });
     }
 
     return () => {

@@ -16,6 +16,7 @@ import { useSocialLinks } from '@/contexts/SocialLinksContext';
 import { playAlbum, type PlayerTrack } from '@/components/AudioPlayer';
 
 interface Track {
+  id?: string;
   title: string;
   duration: string;
   audioUrl?: string;
@@ -31,6 +32,7 @@ interface Release {
   tracks: Track[];
   streamingLinks: { platform: string; url: string }[];
   slug?: string;
+  listenCount?: number;
 }
 
 interface MusicData {
@@ -41,6 +43,7 @@ interface MusicData {
 export default function MusicPage() {
   const socials = useSocialLinks();
   const [data, setData] = useState<MusicData | null>(null);
+  const [playCounts, setPlayCounts] = useState<{ tracks: Record<string, number>; releases: Record<string, number> }>({ tracks: {}, releases: {} });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,6 +52,10 @@ export default function MusicPage() {
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false));
+    fetch('/api/public/analytics')
+      .then(res => res.json())
+      .then(setPlayCounts)
+      .catch(() => {});
   }, []);
 
   if (loading) {
@@ -72,6 +79,8 @@ export default function MusicPage() {
         duration: t.duration,
         releaseTitle: release.title,
         coverArt: release.coverArt,
+        trackId: t.id,
+        releaseId: release.id,
       }));
 
     if (playableTracks.length > 0) {
@@ -264,7 +273,12 @@ export default function MusicPage() {
                         </div>
                         <span className="tag mb-2 inline-block text-xs">{release.type}</span>
                         <h3 className="text-xl font-display text-paper mb-1 group-hover:text-blood transition-colors">{release.title}</h3>
-                        <p className="text-concrete text-sm">{release.tracks.length} tracks</p>
+                        <p className="text-concrete text-sm">
+                          {release.tracks.length} tracks
+                          {(playCounts.releases[release.id] || 0) > 0 && (
+                            <span className="ml-2 text-concrete/60">&middot; {playCounts.releases[release.id].toLocaleString()} plays</span>
+                          )}
+                        </p>
                       </div>
                     </Link>
                   </FadeUp>

@@ -19,6 +19,7 @@ import {
   EyeIcon,
   EnvelopeIcon,
   Cog6ToothIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 // Build version - updated on each deploy to force cache refresh
@@ -34,6 +35,7 @@ const navigation = [
   { name: 'Media', href: '/hailsquatan/media', icon: PhotoIcon, shortName: 'Media' },
   { name: 'Homepage', href: '/hailsquatan/homepage', icon: HomeIcon, shortName: 'Home' },
   { name: 'Orders', href: '/hailsquatan/orders', icon: ClipboardDocumentListIcon, shortName: 'Orders' },
+  { name: 'Analytics', href: '/hailsquatan/analytics', icon: ChartBarIcon, shortName: 'Stats' },
   { name: 'Visibility', href: '/hailsquatan/visibility', icon: EyeIcon, shortName: 'Vis' },
   { name: 'Settings', href: '/hailsquatan/settings', icon: Cog6ToothIcon, shortName: 'Config' },
 ];

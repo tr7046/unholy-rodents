@@ -288,6 +288,41 @@ model SiteContent {
 }
 
 // ============================================
+// ANALYTICS
+// ============================================
+
+model PageView {
+  id        String   @id @default(cuid())
+  path      String
+  referrer  String?
+  userAgent String?
+  ip        String?
+  sessionId String?
+  createdAt DateTime @default(now())
+
+  @@index([path])
+  @@index([createdAt])
+  @@index([sessionId])
+  @@map("page_views")
+}
+
+model TrackPlay {
+  id        String   @id @default(cuid())
+  trackId   String
+  trackName String
+  releaseId String?
+  releaseName String?
+  sessionId String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([trackId])
+  @@index([createdAt])
+  @@index([releaseId])
+  @@map("track_plays")
+}
+
+// ============================================
 // ADMIN
 // ============================================
 

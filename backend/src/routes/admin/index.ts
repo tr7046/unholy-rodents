@@ -8,6 +8,7 @@ import messagesRouter from './messages';
 import contentRouter from './content';
 import uploadRouter from './upload';
 import paymentConfigRouter from './payment-config';
+import analyticsRouter from './analytics';
 import { authenticate, authenticateInternal } from '../../middleware/auth';
 
 const router = Router();
@@ -24,5 +25,6 @@ router.use('/messages', authenticateInternal, messagesRouter);
 router.use('/upload', authenticateInternal, uploadRouter);
 router.use('/payment-config', authenticateInternal, paymentConfigRouter);
 router.use('/content', authenticateInternal, contentRouter);
+router.use('/analytics', authenticateInternal, analyticsRouter);
 
 export default router;

@@ -339,108 +339,111 @@ export default function HomePage() {
         {(data?.featuredRelease.enabled !== false) && <TornDivider color="void" />}
       </Visible>
 
-      {/* Social Feed Section */}
-      <Visible path="sections.home.socialFeed">
-        <section className="section bg-void overflow-hidden">
-          <div className="container mx-auto px-4">
-            <FadeUp>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-12">
-                <h2 className="text-paper">FOLLOW THE CHAOS</h2>
-                <div className="flex gap-4">
-                  {socials.instagram && (
-                    <motion.a
-                      href={socials.instagram}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-outline text-sm"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Instagram
-                    </motion.a>
-                  )}
-                  {socials.facebook && (
-                    <motion.a
-                      href={socials.facebook}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-ghost text-sm"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Facebook
-                    </motion.a>
-                  )}
+      {/* Social Feed Section - only show if at least one social link is configured */}
+      {(socials.instagram || socials.facebook || socials.youtube || socials.tiktok) && (
+        <Visible path="sections.home.socialFeed">
+          <section className="section bg-void overflow-hidden">
+            <div className="container mx-auto px-4">
+              <FadeUp>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-12">
+                  <h2 className="text-paper">FOLLOW THE CHAOS</h2>
+                  <div className="flex gap-4">
+                    {socials.instagram && (
+                      <motion.a
+                        href={socials.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-outline text-sm"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Instagram
+                      </motion.a>
+                    )}
+                    {socials.facebook && (
+                      <motion.a
+                        href={socials.facebook}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-ghost text-sm"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Facebook
+                      </motion.a>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </FadeUp>
+              </FadeUp>
 
-            {/* Scrolling Social Feed */}
-            <div className="relative">
-              {/* Gradient fade on sides */}
-              <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-[#0a0a0a] to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#0a0a0a] to-transparent z-10 pointer-events-none" />
+              {/* Scrolling Social Feed */}
+              {socials.instagram && (
+                <div className="relative">
+                  {/* Gradient fade on sides */}
+                  <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-[#0a0a0a] to-transparent z-10 pointer-events-none" />
+                  <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#0a0a0a] to-transparent z-10 pointer-events-none" />
 
-              {/* Auto-scrolling feed */}
-              <motion.div
-                className="flex gap-4"
-                animate={{ x: [0, -1200] }}
-                transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-              >
-                {/* Placeholder posts - replace with real Instagram embeds */}
-                {[...Array(8)].map((_, i) => (
-                  <motion.a
-                    key={i}
-                    href={socials.instagram || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-shrink-0 w-64 h-64 bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#c41e3a] transition-colors relative group overflow-hidden"
-                    whileHover={{ scale: 1.02 }}
+                  {/* Auto-scrolling feed */}
+                  <motion.div
+                    className="flex gap-4"
+                    animate={{ x: [0, -1200] }}
+                    transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
                   >
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-                      <span className="text-5xl font-display text-[#c41e3a] mb-2">
-                        {['🐿️', '🔥', '🎸', '🤘', '💀', '⚡', '🎤', '🥁'][i]}
-                      </span>
-                      <span className="text-xs font-mono text-[#888888] uppercase tracking-wider text-center">
-                        Follow for updates
-                      </span>
-                    </div>
-                    <div className="absolute inset-0 bg-[#c41e3a]/0 group-hover:bg-[#c41e3a]/10 transition-colors" />
-                  </motion.a>
-                ))}
-                {/* Duplicate for seamless loop */}
-                {[...Array(8)].map((_, i) => (
-                  <motion.a
-                    key={`dup-${i}`}
-                    href={socials.instagram || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-shrink-0 w-64 h-64 bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#c41e3a] transition-colors relative group overflow-hidden"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-                      <span className="text-5xl font-display text-[#c41e3a] mb-2">
-                        {['🐿️', '🔥', '🎸', '🤘', '💀', '⚡', '🎤', '🥁'][i]}
-                      </span>
-                      <span className="text-xs font-mono text-[#888888] uppercase tracking-wider text-center">
-                        Follow for updates
-                      </span>
-                    </div>
-                    <div className="absolute inset-0 bg-[#c41e3a]/0 group-hover:bg-[#c41e3a]/10 transition-colors" />
-                  </motion.a>
-                ))}
-              </motion.div>
+                    {[...Array(8)].map((_, i) => (
+                      <motion.a
+                        key={i}
+                        href={socials.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-shrink-0 w-64 h-64 bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#c41e3a] transition-colors relative group overflow-hidden"
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+                          <span className="text-5xl font-display text-[#c41e3a] mb-2">
+                            {['🐿️', '🔥', '🎸', '🤘', '💀', '⚡', '🎤', '🥁'][i]}
+                          </span>
+                          <span className="text-xs font-mono text-[#888888] uppercase tracking-wider text-center">
+                            Follow for updates
+                          </span>
+                        </div>
+                        <div className="absolute inset-0 bg-[#c41e3a]/0 group-hover:bg-[#c41e3a]/10 transition-colors" />
+                      </motion.a>
+                    ))}
+                    {/* Duplicate for seamless loop */}
+                    {[...Array(8)].map((_, i) => (
+                      <motion.a
+                        key={`dup-${i}`}
+                        href={socials.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-shrink-0 w-64 h-64 bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#c41e3a] transition-colors relative group overflow-hidden"
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+                          <span className="text-5xl font-display text-[#c41e3a] mb-2">
+                            {['🐿️', '🔥', '🎸', '🤘', '💀', '⚡', '🎤', '🥁'][i]}
+                          </span>
+                          <span className="text-xs font-mono text-[#888888] uppercase tracking-wider text-center">
+                            Follow for updates
+                          </span>
+                        </div>
+                        <div className="absolute inset-0 bg-[#c41e3a]/0 group-hover:bg-[#c41e3a]/10 transition-colors" />
+                      </motion.a>
+                    ))}
+                  </motion.div>
+                </div>
+              )}
+
+              {/* Call to action */}
+              <FadeUp delay={0.2}>
+                <p className="text-center text-[#888888] text-sm mt-8 font-mono">
+                  Follow for show announcements & behind the scenes chaos
+                </p>
+              </FadeUp>
             </div>
-
-            {/* Call to action */}
-            <FadeUp delay={0.2}>
-              <p className="text-center text-[#888888] text-sm mt-8 font-mono">
-                Follow for show announcements & behind the scenes chaos
-              </p>
-            </FadeUp>
-          </div>
-        </section>
-      </Visible>
+          </section>
+        </Visible>
+      )}
     </div>
   );
 }

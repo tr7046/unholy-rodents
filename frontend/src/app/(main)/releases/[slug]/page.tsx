@@ -359,9 +359,13 @@ export default function ReleasePage({ params }: { params: Promise<{ slug: string
                     )}
 
                     {/* Play count */}
-                    {track.id && (playCounts.tracks[track.id] || 0) > 0 && (
-                      <span className="text-concrete/50 text-xs tabular-nums">{playCounts.tracks[track.id].toLocaleString()}</span>
-                    )}
+                    {(() => {
+                      const key = track.id || track.audioUrl;
+                      const count = key ? playCounts.tracks[key] || 0 : 0;
+                      return count > 0 ? (
+                        <span className="text-concrete/50 text-xs tabular-nums">{count.toLocaleString()}</span>
+                      ) : null;
+                    })()}
 
                     {/* Duration */}
                     <span className="text-concrete text-sm">{track.duration}</span>

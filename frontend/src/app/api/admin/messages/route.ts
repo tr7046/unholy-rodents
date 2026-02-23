@@ -24,9 +24,16 @@ export async function GET(request: NextRequest) {
       cache: 'no-store',
     });
 
+    if (!response.ok) {
+      // Don't forward raw backend errors - return a clean error
+      return NextResponse.json(
+        { error: 'Failed to fetch messages', total: 0, unreadCount: 0, data: [] },
+        { status: 200, headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      );
+    }
+
     const data = await response.json();
     return NextResponse.json(data, {
-      status: response.status,
       headers: { 'Cache-Control': 'no-store, max-age=0' },
     });
   } catch {

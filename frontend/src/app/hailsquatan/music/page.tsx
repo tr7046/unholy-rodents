@@ -404,19 +404,41 @@ function ReleaseModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 50 * 1024 * 1024) {
+      alert('Audio file must be under 50MB');
+      return;
+    }
+
     setUploadingTrack(index);
-    const form = new FormData();
-    form.append('file', file);
-    form.append('folder', 'music');
 
     try {
-      const res = await fetch('/api/admin/upload', { method: 'POST', body: form });
-      if (res.ok) {
-        const { url } = await res.json();
-        updateTrack(index, 'audioUrl', url);
+      // Get signed upload params (bypasses Vercel 4.5MB body limit)
+      const sigRes = await fetch('/api/admin/upload?folder=music');
+      if (!sigRes.ok) {
+        alert('Failed to get upload signature');
+        return;
+      }
+      const { signature, timestamp, cloudName, apiKey, folder } = await sigRes.json();
+
+      // Upload directly to Cloudinary from browser
+      const form = new FormData();
+      form.append('file', file);
+      form.append('folder', folder);
+      form.append('signature', signature);
+      form.append('timestamp', timestamp.toString());
+      form.append('api_key', apiKey);
+      form.append('resource_type', 'video'); // Cloudinary uses 'video' for audio
+
+      const uploadRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+        { method: 'POST', body: form }
+      );
+
+      if (uploadRes.ok) {
+        const data = await uploadRes.json();
+        updateTrack(index, 'audioUrl', data.secure_url);
       } else {
-        const err = await res.json();
-        alert(err.error || 'Upload failed');
+        alert('Upload failed');
       }
     } finally {
       setUploadingTrack(null);

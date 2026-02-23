@@ -16,13 +16,16 @@ export async function GET(request: NextRequest) {
     }
 
     const folder = request.nextUrl.searchParams.get('folder') || 'general';
+    const resourceType = request.nextUrl.searchParams.get('resource_type') || 'auto';
     const timestamp = Math.round(Date.now() / 1000);
 
+    const paramsToSign: Record<string, string | number> = {
+      timestamp,
+      folder: `unholy-rodents/${folder}`,
+    };
+
     const signature = cloudinary.utils.api_sign_request(
-      {
-        timestamp,
-        folder: `unholy-rodents/${folder}`,
-      },
+      paramsToSign,
       process.env.CLOUDINARY_API_SECRET!,
     );
 
@@ -32,6 +35,7 @@ export async function GET(request: NextRequest) {
       cloudName: process.env.CLOUDINARY_CLOUD_NAME,
       apiKey: process.env.CLOUDINARY_API_KEY,
       folder: `unholy-rodents/${folder}`,
+      resourceType,
     });
   } catch (error) {
     console.error('[upload] Signature generation failed:', error);

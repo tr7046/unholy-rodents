@@ -106,11 +106,14 @@ export default function AudioPlayer() {
   const currentTrack = state.tracks[state.currentIndex];
 
   const updateProgress = useCallback(() => {
-    if (howlRef.current && howlRef.current.playing()) {
-      setProgress(howlRef.current.seek() as number);
+    if (howlRef.current && state.isPlaying) {
+      const seek = howlRef.current.seek();
+      if (typeof seek === 'number' && isFinite(seek)) {
+        setProgress(seek);
+      }
       rafRef.current = requestAnimationFrame(updateProgress);
     }
-  }, []);
+  }, [state.isPlaying]);
 
   // Load and play track when it changes
   useEffect(() => {
@@ -118,7 +121,9 @@ export default function AudioPlayer() {
     if (loadedUrlRef.current === currentTrack.audioUrl && howlRef.current) {
       // Same track, just toggle play/pause
       if (state.isPlaying) {
-        howlRef.current.play();
+        if (!howlRef.current.playing()) {
+          howlRef.current.play();
+        }
         rafRef.current = requestAnimationFrame(updateProgress);
       } else {
         howlRef.current.pause();
@@ -180,7 +185,7 @@ export default function AudioPlayer() {
     return () => {
       cancelAnimationFrame(rafRef.current);
     };
-  }, [currentTrack?.audioUrl, state.isPlaying, state.currentIndex, updateProgress, muted, volume]);
+  }, [currentTrack?.audioUrl, state.isPlaying, state.currentIndex, updateProgress]);
 
   // Update volume
   useEffect(() => {
@@ -230,6 +235,11 @@ export default function AudioPlayer() {
     const time = pct * duration;
     howlRef.current.seek(time);
     setProgress(time);
+    // Restart progress tracking after seek
+    cancelAnimationFrame(rafRef.current);
+    if (state.isPlaying) {
+      rafRef.current = requestAnimationFrame(updateProgress);
+    }
   }
 
   function handleSeekMouseDown(e: React.MouseEvent<HTMLDivElement>) {
@@ -266,6 +276,10 @@ export default function AudioPlayer() {
     const time = Math.min(duration, (howlRef.current.seek() as number) + 15);
     howlRef.current.seek(time);
     setProgress(time);
+    cancelAnimationFrame(rafRef.current);
+    if (state.isPlaying) {
+      rafRef.current = requestAnimationFrame(updateProgress);
+    }
   }
 
   function skipBackward() {
@@ -273,6 +287,10 @@ export default function AudioPlayer() {
     const time = Math.max(0, (howlRef.current.seek() as number) - 15);
     howlRef.current.seek(time);
     setProgress(time);
+    cancelAnimationFrame(rafRef.current);
+    if (state.isPlaying) {
+      rafRef.current = requestAnimationFrame(updateProgress);
+    }
   }
 
   function handleClose() {

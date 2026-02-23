@@ -130,7 +130,7 @@ export default function MusicPage() {
 
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <SlideIn direction="left">
-                <Link href={latestRelease?.slug ? `/music/releases/${latestRelease.slug}` : '#'}>
+                <Link href={latestRelease?.slug ? `/releases/${latestRelease.slug}` : '#'}>
                   <div className="relative group">
                     <motion.div
                       className="aspect-square bg-void border-4 border-blood flex items-center justify-center relative overflow-hidden"
@@ -179,7 +179,7 @@ export default function MusicPage() {
                   </motion.span>
                   <h3 className="text-4xl md:text-5xl font-display text-paper mb-4">
                     {latestRelease ? (
-                      <Link href={latestRelease.slug ? `/music/releases/${latestRelease.slug}` : '#'} className="hover:text-blood transition-colors">
+                      <Link href={latestRelease.slug ? `/releases/${latestRelease.slug}` : '#'} className="hover:text-blood transition-colors">
                         {latestRelease.title}
                       </Link>
                     ) : (
@@ -236,7 +236,7 @@ export default function MusicPage() {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {releases.map((release) => (
                   <FadeUp key={release.id}>
-                    <Link href={release.slug ? `/music/releases/${release.slug}` : '#'}>
+                    <Link href={release.slug ? `/releases/${release.slug}` : '#'}>
                       <div className="card group cursor-pointer">
                         <div className="aspect-square bg-charcoal mb-4 flex items-center justify-center overflow-hidden relative">
                           {release.coverArt ? (

@@ -447,7 +447,7 @@ function ReleaseModal({
 
   function copyPrivateLink() {
     const origin = window.location.origin;
-    const link = `${origin}/music/releases/${formData.slug}`;
+    const link = `${origin}/releases/${formData.slug}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -507,7 +507,7 @@ function ReleaseModal({
             <div>
               <label className="block text-sm font-medium text-[#f5f5f0] mb-2">URL Slug</label>
               <div className="flex items-center gap-2">
-                <span className="text-[#888888] text-sm">/music/releases/</span>
+                <span className="text-[#888888] text-sm">/releases/</span>
                 <input
                   type="text"
                   value={formData.slug}
@@ -548,7 +548,7 @@ function ReleaseModal({
           {formData.slug && formData.visibility !== 'public' && (
             <div className="flex items-center gap-3 bg-[#252525] rounded-lg px-4 py-3">
               <span className="text-sm text-[#888888] flex-1 font-mono truncate">
-                {typeof window !== 'undefined' ? window.location.origin : ''}/music/releases/{formData.slug}
+                {typeof window !== 'undefined' ? window.location.origin : ''}/releases/{formData.slug}
               </span>
               <button
                 onClick={copyPrivateLink}

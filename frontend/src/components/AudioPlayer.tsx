@@ -102,18 +102,36 @@ export default function AudioPlayer() {
   const loadedUrlRef = useRef<string>('');
   const gapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seekBarRef = useRef<HTMLDivElement>(null);
+  // Use a ref for isPlaying so the RAF loop never has stale closure
+  const isPlayingRef = useRef(false);
+  // Track if we're in a drag to avoid seeking on every mousemove
+  const isDraggingRef = useRef(false);
+  const pendingSeekRef = useRef<number | null>(null);
 
   const currentTrack = state.tracks[state.currentIndex];
 
-  const updateProgress = useCallback(() => {
-    if (howlRef.current && state.isPlaying) {
-      const seek = howlRef.current.seek();
-      if (typeof seek === 'number' && isFinite(seek)) {
-        setProgress(seek);
-      }
-      rafRef.current = requestAnimationFrame(updateProgress);
-    }
+  // Keep isPlayingRef in sync
+  useEffect(() => {
+    isPlayingRef.current = state.isPlaying;
   }, [state.isPlaying]);
+
+  const startProgressLoop = useCallback(() => {
+    cancelAnimationFrame(rafRef.current);
+    const tick = () => {
+      if (howlRef.current && isPlayingRef.current && !isDraggingRef.current) {
+        const seek = howlRef.current.seek();
+        if (typeof seek === 'number' && isFinite(seek)) {
+          setProgress(seek);
+        }
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const stopProgressLoop = useCallback(() => {
+    cancelAnimationFrame(rafRef.current);
+  }, []);
 
   // Load and play track when it changes
   useEffect(() => {
@@ -124,10 +142,10 @@ export default function AudioPlayer() {
         if (!howlRef.current.playing()) {
           howlRef.current.play();
         }
-        rafRef.current = requestAnimationFrame(updateProgress);
+        startProgressLoop();
       } else {
         howlRef.current.pause();
-        cancelAnimationFrame(rafRef.current);
+        stopProgressLoop();
       }
       return;
     }
@@ -136,7 +154,7 @@ export default function AudioPlayer() {
     if (howlRef.current) {
       howlRef.current.unload();
     }
-    cancelAnimationFrame(rafRef.current);
+    stopProgressLoop();
 
     loadedUrlRef.current = currentTrack.audioUrl;
 
@@ -146,10 +164,10 @@ export default function AudioPlayer() {
       volume: muted ? 0 : volume,
       onplay: () => {
         setDuration(howl.duration());
-        rafRef.current = requestAnimationFrame(updateProgress);
+        startProgressLoop();
       },
       onend: () => {
-        cancelAnimationFrame(rafRef.current);
+        stopProgressLoop();
         // Auto-advance to next track with a 1-second pause
         if (state.currentIndex < state.tracks.length - 1) {
           globalState = { ...globalState, isPlaying: false };
@@ -183,9 +201,10 @@ export default function AudioPlayer() {
     }
 
     return () => {
-      cancelAnimationFrame(rafRef.current);
+      stopProgressLoop();
     };
-  }, [currentTrack?.audioUrl, state.isPlaying, state.currentIndex, updateProgress]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTrack?.audioUrl, state.isPlaying, state.currentIndex]);
 
   // Update volume
   useEffect(() => {
@@ -203,9 +222,9 @@ export default function AudioPlayer() {
       if (gapTimerRef.current) {
         clearTimeout(gapTimerRef.current);
       }
-      cancelAnimationFrame(rafRef.current);
+      stopProgressLoop();
     };
-  }, []);
+  }, [stopProgressLoop]);
 
   function togglePlay() {
     globalState = { ...globalState, isPlaying: !state.isPlaying };
@@ -228,27 +247,39 @@ export default function AudioPlayer() {
     }
   }
 
-  function seekToPosition(clientX: number) {
-    if (!howlRef.current || !duration || !seekBarRef.current) return;
-    const rect = seekBarRef.current.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    const time = pct * duration;
+  // Commit a seek — actually move the audio position
+  function commitSeek(time: number) {
+    if (!howlRef.current) return;
     howlRef.current.seek(time);
     setProgress(time);
-    // Restart progress tracking after seek
-    cancelAnimationFrame(rafRef.current);
-    if (state.isPlaying) {
-      rafRef.current = requestAnimationFrame(updateProgress);
-    }
   }
 
+  // During drag: only update visual progress, don't seek the audio
   function handleSeekMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+    if (!seekBarRef.current || !duration) return;
+    isDraggingRef.current = true;
     setIsSeeking(true);
-    seekToPosition(e.clientX);
+    const rect = seekBarRef.current.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const time = pct * duration;
+    setProgress(time);
+    pendingSeekRef.current = time;
 
-    const onMove = (ev: MouseEvent) => seekToPosition(ev.clientX);
+    const onMove = (ev: MouseEvent) => {
+      if (!seekBarRef.current || !duration) return;
+      const r = seekBarRef.current.getBoundingClientRect();
+      const p = Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
+      const t = p * duration;
+      setProgress(t);
+      pendingSeekRef.current = t;
+    };
     const onUp = () => {
+      isDraggingRef.current = false;
       setIsSeeking(false);
+      if (pendingSeekRef.current !== null) {
+        commitSeek(pendingSeekRef.current);
+        pendingSeekRef.current = null;
+      }
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
     };
@@ -257,40 +288,46 @@ export default function AudioPlayer() {
   }
 
   function handleSeekTouchStart(e: React.TouchEvent<HTMLDivElement>) {
+    if (!seekBarRef.current || !duration) return;
+    isDraggingRef.current = true;
     setIsSeeking(true);
-    seekToPosition(e.touches[0].clientX);
+    const rect = seekBarRef.current.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));
+    const time = pct * duration;
+    setProgress(time);
+    pendingSeekRef.current = time;
   }
 
   function handleSeekTouchMove(e: React.TouchEvent<HTMLDivElement>) {
-    if (isSeeking) {
-      seekToPosition(e.touches[0].clientX);
-    }
+    if (!isDraggingRef.current || !seekBarRef.current || !duration) return;
+    const rect = seekBarRef.current.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));
+    const time = pct * duration;
+    setProgress(time);
+    pendingSeekRef.current = time;
   }
 
   function handleSeekTouchEnd() {
+    isDraggingRef.current = false;
     setIsSeeking(false);
+    if (pendingSeekRef.current !== null) {
+      commitSeek(pendingSeekRef.current);
+      pendingSeekRef.current = null;
+    }
   }
 
   function skipForward() {
     if (!howlRef.current || !duration) return;
-    const time = Math.min(duration, (howlRef.current.seek() as number) + 15);
-    howlRef.current.seek(time);
-    setProgress(time);
-    cancelAnimationFrame(rafRef.current);
-    if (state.isPlaying) {
-      rafRef.current = requestAnimationFrame(updateProgress);
-    }
+    const current = howlRef.current.seek() as number;
+    const time = Math.min(duration, current + 15);
+    commitSeek(time);
   }
 
   function skipBackward() {
     if (!howlRef.current) return;
-    const time = Math.max(0, (howlRef.current.seek() as number) - 15);
-    howlRef.current.seek(time);
-    setProgress(time);
-    cancelAnimationFrame(rafRef.current);
-    if (state.isPlaying) {
-      rafRef.current = requestAnimationFrame(updateProgress);
-    }
+    const current = howlRef.current.seek() as number;
+    const time = Math.max(0, current - 15);
+    commitSeek(time);
   }
 
   function handleClose() {
@@ -303,7 +340,7 @@ export default function AudioPlayer() {
       gapTimerRef.current = null;
     }
     loadedUrlRef.current = '';
-    cancelAnimationFrame(rafRef.current);
+    stopProgressLoop();
     setProgress(0);
     setDuration(0);
     closePlayer();

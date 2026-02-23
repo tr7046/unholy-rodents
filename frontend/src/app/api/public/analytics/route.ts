@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
-// POST - Record a pageview or play event
+// POST - Record a pageview or play event (fire-and-forget, always returns 200)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { type, ...data } = body;
 
     if (type !== 'pageview' && type !== 'play') {
-      return NextResponse.json({ error: 'Invalid event type' }, { status: 400 });
+      return NextResponse.json({ success: false });
     }
 
     const endpoint = type === 'pageview' ? 'pageview' : 'play';
@@ -20,13 +20,10 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(data),
     });
 
-    if (!res.ok) {
-      return NextResponse.json({ error: 'Failed to record event' }, { status: res.status });
-    }
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: res.ok });
   } catch {
-    return NextResponse.json({ error: 'Failed to record event' }, { status: 500 });
+    // Analytics should never fail the user experience
+    return NextResponse.json({ success: false });
   }
 }
 

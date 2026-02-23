@@ -94,8 +94,11 @@ export default function AudioPlayer() {
   const [volume, setVolume] = useState(0.8);
   const [muted, setMuted] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
+  const [isSeeking, setIsSeeking] = useState(false);
   const rafRef = useRef<number>(0);
   const loadedUrlRef = useRef<string>('');
+  const gapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const seekBarRef = useRef<HTMLDivElement>(null);
 
   const currentTrack = state.tracks[state.currentIndex];
 
@@ -139,10 +142,15 @@ export default function AudioPlayer() {
       },
       onend: () => {
         cancelAnimationFrame(rafRef.current);
-        // Auto-advance to next track
+        // Auto-advance to next track with a 1-second pause
         if (state.currentIndex < state.tracks.length - 1) {
-          globalState = { ...globalState, currentIndex: state.currentIndex + 1 };
+          globalState = { ...globalState, isPlaying: false };
           notify();
+          gapTimerRef.current = setTimeout(() => {
+            loadedUrlRef.current = '';
+            globalState = { ...globalState, currentIndex: state.currentIndex + 1, isPlaying: true };
+            notify();
+          }, 1000);
         } else {
           globalState = { ...globalState, isPlaying: false };
           notify();
@@ -177,6 +185,9 @@ export default function AudioPlayer() {
       if (howlRef.current) {
         howlRef.current.unload();
       }
+      if (gapTimerRef.current) {
+        clearTimeout(gapTimerRef.current);
+      }
       cancelAnimationFrame(rafRef.current);
     };
   }, []);
@@ -202,11 +213,54 @@ export default function AudioPlayer() {
     }
   }
 
-  function seek(e: React.MouseEvent<HTMLDivElement>) {
-    if (!howlRef.current || !duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pct = (e.clientX - rect.left) / rect.width;
+  function seekToPosition(clientX: number) {
+    if (!howlRef.current || !duration || !seekBarRef.current) return;
+    const rect = seekBarRef.current.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const time = pct * duration;
+    howlRef.current.seek(time);
+    setProgress(time);
+  }
+
+  function handleSeekMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+    setIsSeeking(true);
+    seekToPosition(e.clientX);
+
+    const onMove = (ev: MouseEvent) => seekToPosition(ev.clientX);
+    const onUp = () => {
+      setIsSeeking(false);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function handleSeekTouchStart(e: React.TouchEvent<HTMLDivElement>) {
+    setIsSeeking(true);
+    seekToPosition(e.touches[0].clientX);
+  }
+
+  function handleSeekTouchMove(e: React.TouchEvent<HTMLDivElement>) {
+    if (isSeeking) {
+      seekToPosition(e.touches[0].clientX);
+    }
+  }
+
+  function handleSeekTouchEnd() {
+    setIsSeeking(false);
+  }
+
+  function skipForward() {
+    if (!howlRef.current || !duration) return;
+    const time = Math.min(duration, (howlRef.current.seek() as number) + 15);
+    howlRef.current.seek(time);
+    setProgress(time);
+  }
+
+  function skipBackward() {
+    if (!howlRef.current) return;
+    const time = Math.max(0, (howlRef.current.seek() as number) - 15);
     howlRef.current.seek(time);
     setProgress(time);
   }
@@ -215,6 +269,10 @@ export default function AudioPlayer() {
     if (howlRef.current) {
       howlRef.current.unload();
       howlRef.current = null;
+    }
+    if (gapTimerRef.current) {
+      clearTimeout(gapTimerRef.current);
+      gapTimerRef.current = null;
     }
     loadedUrlRef.current = '';
     cancelAnimationFrame(rafRef.current);
@@ -252,16 +310,22 @@ export default function AudioPlayer() {
         </div>
       )}
 
-      {/* Progress bar (clickable) */}
+      {/* Progress bar (drag + touch) */}
       <div
-        className="h-1 bg-[#333] cursor-pointer group"
-        onClick={seek}
+        ref={seekBarRef}
+        className="h-2 bg-[#333] cursor-pointer group relative touch-none select-none"
+        onMouseDown={handleSeekMouseDown}
+        onTouchStart={handleSeekTouchStart}
+        onTouchMove={handleSeekTouchMove}
+        onTouchEnd={handleSeekTouchEnd}
       >
+        {/* Larger invisible touch target */}
+        <div className="absolute -top-3 -bottom-3 left-0 right-0" />
         <div
           className="h-full bg-[#c41e3a] group-hover:bg-[#e63946] transition-colors relative"
           style={{ width: `${progressPct}%` }}
         >
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#f5f5f0] rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#f5f5f0] rounded-full shadow transition-opacity ${isSeeking ? 'opacity-100 scale-110' : 'opacity-0 group-hover:opacity-100'}`} />
         </div>
       </div>
 
@@ -283,13 +347,23 @@ export default function AudioPlayer() {
         </div>
 
         {/* Playback controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={prevTrack}
             disabled={state.currentIndex === 0}
             className="p-2 text-[#888888] hover:text-[#f5f5f0] disabled:opacity-30 transition-colors"
+            title="Previous track"
           >
             <BackwardIcon className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={skipBackward}
+            className="p-2 text-[#888888] hover:text-[#f5f5f0] transition-colors relative"
+            title="Back 15 seconds"
+          >
+            <BackwardIcon className="w-3.5 h-3.5" />
+            <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[8px] font-bold text-[#888888]">15</span>
           </button>
 
           <button
@@ -304,9 +378,19 @@ export default function AudioPlayer() {
           </button>
 
           <button
+            onClick={skipForward}
+            className="p-2 text-[#888888] hover:text-[#f5f5f0] transition-colors relative"
+            title="Forward 15 seconds"
+          >
+            <ForwardIcon className="w-3.5 h-3.5" />
+            <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[8px] font-bold text-[#888888]">15</span>
+          </button>
+
+          <button
             onClick={nextTrack}
             disabled={state.currentIndex >= state.tracks.length - 1}
             className="p-2 text-[#888888] hover:text-[#f5f5f0] disabled:opacity-30 transition-colors"
+            title="Next track"
           >
             <ForwardIcon className="w-4 h-4" />
           </button>

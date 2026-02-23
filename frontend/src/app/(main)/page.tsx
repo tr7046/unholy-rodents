@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
 import { Calendar, Music, Play, Volume2 } from 'lucide-react';
+import { useSocialLinks } from '@/contexts/SocialLinksContext';
 import {
   FadeUp,
   SlideIn,
@@ -39,6 +40,7 @@ interface HomepageData {
 
 export default function HomePage() {
   const [data, setData] = useState<HomepageData | null>(null);
+  const socials = useSocialLinks();
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -345,26 +347,30 @@ export default function HomePage() {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-12">
                 <h2 className="text-paper">FOLLOW THE CHAOS</h2>
                 <div className="flex gap-4">
-                  <motion.a
-                    href="https://instagram.com/unholyrodentsband"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-outline text-sm"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    @unholyrodentsband
-                  </motion.a>
-                  <motion.a
-                    href="https://facebook.com/unholyrodents"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-ghost text-sm"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Facebook
-                  </motion.a>
+                  {socials.instagram && (
+                    <motion.a
+                      href={socials.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-outline text-sm"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Instagram
+                    </motion.a>
+                  )}
+                  {socials.facebook && (
+                    <motion.a
+                      href={socials.facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-ghost text-sm"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Facebook
+                    </motion.a>
+                  )}
                 </div>
               </div>
             </FadeUp>
@@ -385,7 +391,7 @@ export default function HomePage() {
                 {[...Array(8)].map((_, i) => (
                   <motion.a
                     key={i}
-                    href="https://instagram.com/unholyrodentsband"
+                    href={socials.instagram || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-shrink-0 w-64 h-64 bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#c41e3a] transition-colors relative group overflow-hidden"
@@ -406,7 +412,7 @@ export default function HomePage() {
                 {[...Array(8)].map((_, i) => (
                   <motion.a
                     key={`dup-${i}`}
-                    href="https://instagram.com/unholyrodentsband"
+                    href={socials.instagram || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-shrink-0 w-64 h-64 bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#c41e3a] transition-colors relative group overflow-hidden"
@@ -429,7 +435,7 @@ export default function HomePage() {
             {/* Call to action */}
             <FadeUp delay={0.2}>
               <p className="text-center text-[#888888] text-sm mt-8 font-mono">
-                Latest posts from @unholyrodentsband • Follow for show announcements & behind the scenes chaos
+                Follow for show announcements & behind the scenes chaos
               </p>
             </FadeUp>
           </div>

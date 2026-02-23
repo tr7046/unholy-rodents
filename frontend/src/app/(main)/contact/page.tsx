@@ -14,11 +14,13 @@ import {
   MagneticHover,
 } from '@/components/animations';
 import { Visible } from '@/contexts/VisibilityContext';
+import { useSocialLinks } from '@/contexts/SocialLinksContext';
 import { submitContact, type ContactRequest } from '@/lib/api';
 
 type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 export default function ContactPage() {
+  const socials = useSocialLinks();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -169,30 +171,34 @@ export default function ContactPage() {
                     <div className="mt-12">
                       <h3 className="text-lg font-display text-paper mb-6">FOLLOW US</h3>
                       <div className="flex gap-4">
-                        <MagneticHover>
-                          <motion.a
-                            href="https://instagram.com/unholyrodentsband"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-14 h-14 bg-void border-2 border-blood flex items-center justify-center text-blood hover:bg-blood hover:text-paper transition-colors"
-                            whileHover={{ scale: 1.1, rotate: 5 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Instagram className="w-6 h-6" />
-                          </motion.a>
-                        </MagneticHover>
-                        <MagneticHover>
-                          <motion.a
-                            href="https://facebook.com/unholyrodents"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-14 h-14 bg-void border-2 border-blood flex items-center justify-center text-blood hover:bg-blood hover:text-paper transition-colors"
-                            whileHover={{ scale: 1.1, rotate: -5 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Facebook className="w-6 h-6" />
-                          </motion.a>
-                        </MagneticHover>
+                        {socials.instagram && (
+                          <MagneticHover>
+                            <motion.a
+                              href={socials.instagram}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-14 h-14 bg-void border-2 border-blood flex items-center justify-center text-blood hover:bg-blood hover:text-paper transition-colors"
+                              whileHover={{ scale: 1.1, rotate: 5 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <Instagram className="w-6 h-6" />
+                            </motion.a>
+                          </MagneticHover>
+                        )}
+                        {socials.facebook && (
+                          <MagneticHover>
+                            <motion.a
+                              href={socials.facebook}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-14 h-14 bg-void border-2 border-blood flex items-center justify-center text-blood hover:bg-blood hover:text-paper transition-colors"
+                              whileHover={{ scale: 1.1, rotate: -5 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <Facebook className="w-6 h-6" />
+                            </motion.a>
+                          </MagneticHover>
+                        )}
                       </div>
                     </div>
                   </FadeUp>

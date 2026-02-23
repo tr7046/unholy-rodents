@@ -12,6 +12,7 @@ import {
   MagneticHover,
 } from '@/components/animations';
 import { Visible } from '@/contexts/VisibilityContext';
+import { useSocialLinks } from '@/contexts/SocialLinksContext';
 import { playAlbum, type PlayerTrack } from '@/components/AudioPlayer';
 
 interface Track {
@@ -38,6 +39,7 @@ interface MusicData {
 }
 
 export default function MusicPage() {
+  const socials = useSocialLinks();
   const [data, setData] = useState<MusicData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -284,18 +286,20 @@ export default function MusicPage() {
                     Our discography is in the works. Follow us on social media to be the first to know when we drop new music.
                   </p>
                   <div className="flex justify-center gap-4">
-                    <MagneticHover>
-                      <motion.a
-                        href="https://instagram.com/unholyrodentsband"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-outline text-sm"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        Follow on Instagram
-                      </motion.a>
-                    </MagneticHover>
+                    {socials.instagram && (
+                      <MagneticHover>
+                        <motion.a
+                          href={socials.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-outline text-sm"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          Follow on Instagram
+                        </motion.a>
+                      </MagneticHover>
+                    )}
                   </div>
                 </div>
               </FadeUp>

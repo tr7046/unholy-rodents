@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Camera, Video, FileImage, Instagram, Facebook } from 'lucide-react';
 import { Visible } from '@/contexts/VisibilityContext';
+import { useSocialLinks } from '@/contexts/SocialLinksContext';
 
 interface MediaItem {
   id: string;
@@ -21,6 +22,7 @@ interface MediaData {
 }
 
 export default function MediaPage() {
+  const socials = useSocialLinks();
   const [data, setData] = useState<MediaData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -68,26 +70,30 @@ export default function MediaPage() {
               FOLLOW FOR MORE
             </h2>
             <div className="flex flex-wrap gap-4">
-              <Visible path="elements.buttons.mediaInstagramLink">
+              {socials.instagram && (
+                <Visible path="elements.buttons.mediaInstagramLink">
+                  <a
+                    href={socials.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 text-white font-bold uppercase tracking-wider hover:opacity-80 transition-opacity inline-flex items-center gap-2"
+                  >
+                    <Instagram className="w-5 h-5" />
+                    Instagram
+                  </a>
+                </Visible>
+              )}
+              {socials.facebook && (
                 <a
-                  href="https://instagram.com/unholyrodentsband"
+                  href={socials.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 text-white font-bold uppercase tracking-wider hover:opacity-80 transition-opacity inline-flex items-center gap-2"
+                  className="bg-[#1877F2] px-6 py-3 text-white font-bold uppercase tracking-wider hover:opacity-80 transition-opacity inline-flex items-center gap-2"
                 >
-                  <Instagram className="w-5 h-5" />
-                  Instagram
+                  <Facebook className="w-5 h-5" />
+                  Facebook
                 </a>
-              </Visible>
-              <a
-                href="https://facebook.com/unholyrodents"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-[#1877F2] px-6 py-3 text-white font-bold uppercase tracking-wider hover:opacity-80 transition-opacity inline-flex items-center gap-2"
-              >
-                <Facebook className="w-5 h-5" />
-                Facebook
-              </a>
+              )}
             </div>
           </div>
         </section>
@@ -112,16 +118,18 @@ export default function MediaPage() {
                   <p className="text-concrete mb-6">
                     Check our Instagram for the latest photos from shows and behind the scenes.
                   </p>
-                  <a
-                    href="https://instagram.com/unholyrodentsband"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button variant="punk">
-                      <Instagram className="w-4 h-4 mr-2" />
-                      View Instagram
-                    </Button>
-                  </a>
+                  {socials.instagram && (
+                    <a
+                      href={socials.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button variant="punk">
+                        <Instagram className="w-4 h-4 mr-2" />
+                        View Instagram
+                      </Button>
+                    </a>
+                  )}
                 </div>
               </Card>
             ) : (

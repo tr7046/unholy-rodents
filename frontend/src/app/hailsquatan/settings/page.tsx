@@ -456,32 +456,107 @@ function ProviderCard({
 // MAIN SETTINGS PAGE
 // ============================================
 
+// ============================================
+// SOCIAL LINKS TYPES
+// ============================================
+
+interface SocialLinks {
+  instagram: string;
+  facebook: string;
+  youtube: string;
+  spotify: string;
+  tiktok: string;
+  twitter: string;
+  bandcamp: string;
+}
+
+const defaultSocials: SocialLinks = {
+  instagram: '',
+  facebook: '',
+  youtube: '',
+  spotify: '',
+  tiktok: '',
+  twitter: '',
+  bandcamp: '',
+};
+
+const socialPlatforms: { key: keyof SocialLinks; label: string; placeholder: string; color: string }[] = [
+  { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/yourband', color: '#E4405F' },
+  { key: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/yourband', color: '#1877F2' },
+  { key: 'youtube', label: 'YouTube', placeholder: 'https://youtube.com/@yourband', color: '#FF0000' },
+  { key: 'spotify', label: 'Spotify', placeholder: 'https://open.spotify.com/artist/...', color: '#1DB954' },
+  { key: 'tiktok', label: 'TikTok', placeholder: 'https://tiktok.com/@yourband', color: '#000000' },
+  { key: 'twitter', label: 'Twitter / X', placeholder: 'https://twitter.com/yourband', color: '#1DA1F2' },
+  { key: 'bandcamp', label: 'Bandcamp', placeholder: 'https://yourband.bandcamp.com', color: '#629AA9' },
+];
+
 export default function SettingsPage() {
   const [config, setConfig] = useState<PaymentConfig>(defaultConfig);
+  const [socials, setSocials] = useState<SocialLinks>(defaultSocials);
+  const [isSavingSocials, setIsSavingSocials] = useState(false);
+  const [socialsSaveStatus, setSocialsSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [testResults, setTestResults] = useState<Record<string, { success: boolean; message: string } | null>>({});
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [hasSocialChanges, setHasSocialChanges] = useState(false);
 
   // Load config
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/api/admin/payment-config');
-        if (res.ok) {
-          const data = await res.json();
+        const [paymentRes, socialsRes] = await Promise.all([
+          fetch('/api/admin/payment-config'),
+          fetch('/api/admin/socials'),
+        ]);
+        if (paymentRes.ok) {
+          const data = await paymentRes.json();
           setConfig(data);
         }
+        if (socialsRes.ok) {
+          const data = await socialsRes.json();
+          setSocials({ ...defaultSocials, ...data });
+        }
       } catch (error) {
-        console.error('Failed to load payment config:', error);
+        console.error('Failed to load settings:', error);
       } finally {
         setIsLoading(false);
       }
     }
     load();
   }, []);
+
+  // Update social link
+  const updateSocial = (key: keyof SocialLinks, value: string) => {
+    setSocials((prev) => ({ ...prev, [key]: value }));
+    setHasSocialChanges(true);
+  };
+
+  // Save social links
+  const saveSocials = async () => {
+    setIsSavingSocials(true);
+    try {
+      const res = await fetch('/api/admin/socials', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(socials),
+      });
+      if (res.ok) {
+        setSocialsSaveStatus('success');
+        setHasSocialChanges(false);
+        setTimeout(() => setSocialsSaveStatus('idle'), 3000);
+      } else {
+        throw new Error('Save failed');
+      }
+    } catch {
+      setSocialsSaveStatus('error');
+      setTimeout(() => setSocialsSaveStatus('idle'), 3000);
+    } finally {
+      setIsSavingSocials(false);
+    }
+  };
 
   // Update provider config
   const updateProvider = (provider: ProviderKey, updates: Record<string, unknown>) => {
@@ -606,6 +681,67 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Social Links Section */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-[#f5f5f0]">Social Links</h2>
+            <p className="text-sm text-[#888]">
+              Set your social media URLs. These appear in the footer, contact page, and across the site.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {socialsSaveStatus === 'success' && (
+              <span className="flex items-center gap-1 text-green-500 text-sm">
+                <CheckCircleIcon className="w-4 h-4" /> Saved
+              </span>
+            )}
+            {socialsSaveStatus === 'error' && (
+              <span className="flex items-center gap-1 text-red-500 text-sm">
+                <ExclamationTriangleIcon className="w-4 h-4" /> Error
+              </span>
+            )}
+            <button
+              onClick={saveSocials}
+              disabled={isSavingSocials || !hasSocialChanges}
+              className="px-4 py-2 bg-[#c41e3a] hover:bg-[#a01830] text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {isSavingSocials ? (
+                <>
+                  <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Social Links'
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-[#1a1a1a] border border-[#333] rounded-lg divide-y divide-[#333]">
+          {socialPlatforms.map((platform) => (
+            <div key={platform.key} className="flex items-center gap-4 p-4">
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+                style={{ backgroundColor: platform.color }}
+              >
+                {platform.label[0]}
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-[#f5f5f0] mb-1">{platform.label}</label>
+                <input
+                  type="url"
+                  value={socials[platform.key]}
+                  onChange={(e) => updateSocial(platform.key, e.target.value)}
+                  placeholder={platform.placeholder}
+                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-[#f5f5f0] placeholder-[#555] focus:outline-none focus:border-[#c41e3a] focus:ring-1 focus:ring-[#c41e3a] font-mono text-sm"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Payment Provider Section */}
       <div>
         <div className="flex items-center justify-between mb-4">
@@ -679,7 +815,7 @@ export default function SettingsPage() {
         </ul>
       </div>
 
-      {/* Floating Save Button */}
+      {/* Floating Save Button - Payment Config */}
       {hasChanges && (
         <div className="fixed bottom-20 lg:bottom-6 right-6 z-50">
           <button
@@ -695,7 +831,7 @@ export default function SettingsPage() {
             ) : (
               <>
                 <CheckCircleIcon className="w-5 h-5" />
-                Save Changes
+                Save Payment Config
               </>
             )}
           </button>

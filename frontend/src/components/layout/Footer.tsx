@@ -6,12 +6,13 @@ import { motion } from 'framer-motion';
 import { Instagram, Facebook, Youtube, Music2 } from 'lucide-react';
 import { FadeUp, StaggerContainer, StaggerItem } from '@/components/animations';
 import { useVisibility, Visible } from '@/contexts/VisibilityContext';
+import { useSocialLinks } from '@/contexts/SocialLinksContext';
 
-const allSocialLinks = [
-  { name: 'Instagram', href: 'https://instagram.com/unholyrodentsband', icon: Instagram, visibilityKey: 'instagram' },
-  { name: 'Facebook', href: 'https://facebook.com/unholyrodents', icon: Facebook, visibilityKey: 'facebook' },
-  { name: 'YouTube', href: '#', icon: Youtube, visibilityKey: 'youtube' },
-  { name: 'Spotify', href: '#', icon: Music2, visibilityKey: 'spotify' },
+const socialConfig = [
+  { key: 'instagram' as const, name: 'Instagram', icon: Instagram, visibilityKey: 'instagram' },
+  { key: 'facebook' as const, name: 'Facebook', icon: Facebook, visibilityKey: 'facebook' },
+  { key: 'youtube' as const, name: 'YouTube', icon: Youtube, visibilityKey: 'youtube' },
+  { key: 'spotify' as const, name: 'Spotify', icon: Music2, visibilityKey: 'spotify' },
 ];
 
 const allFooterLinks = [
@@ -24,13 +25,16 @@ const allFooterLinks = [
 
 export function Footer() {
   const { isVisible } = useVisibility();
+  const socials = useSocialLinks();
 
-  // Filter social links based on visibility settings
+  // Filter social links based on visibility settings AND having a URL configured
   const socialLinks = useMemo(() => {
-    return allSocialLinks.filter(link =>
-      isVisible(`navigation.footer.socialLinks.${link.visibilityKey}`)
-    );
-  }, [isVisible]);
+    return socialConfig
+      .filter(link =>
+        isVisible(`navigation.footer.socialLinks.${link.visibilityKey}`) && socials[link.key]
+      )
+      .map(link => ({ ...link, href: socials[link.key] }));
+  }, [isVisible, socials]);
 
   // Filter footer links based on visibility settings (same as header + pages)
   const footerLinks = useMemo(() => {
@@ -57,7 +61,7 @@ export function Footer() {
                 <p className="text-concrete text-sm mb-6 leading-relaxed">
                   Squirrelcore from Central Florida.
                   <br />
-                  <span className="text-blood">Hail Squātan. Fuck Animal Control. Stay Nuts.</span>
+                  <span className="text-blood">Hail Squatan. Fuck Animal Control. Stay Nuts.</span>
                 </p>
 
                 {/* Social Links */}

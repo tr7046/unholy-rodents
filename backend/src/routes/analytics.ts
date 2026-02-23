@@ -1,10 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db';
+import { randomUUID } from 'crypto';
 
 const router = Router();
-
-// Type-safe prisma access for new models (types generated at build time)
-const db = prisma as any;
 
 // POST /analytics/pageview - Record a page view
 router.post('/pageview', async (req: Request, res: Response) => {
@@ -15,15 +13,16 @@ router.post('/pageview', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'path is required' });
     }
 
-    await db.pageView.create({
-      data: {
-        path: path.slice(0, 500),
-        referrer: referrer ? String(referrer).slice(0, 1000) : null,
-        userAgent: (req.headers['user-agent'] || '').slice(0, 500) || null,
-        ip: (req.ip || req.headers['x-forwarded-for'] as string || '').slice(0, 45) || null,
-        sessionId: sessionId ? String(sessionId).slice(0, 100) : null,
-      },
-    });
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO page_views (id, path, referrer, user_agent, ip, session_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+      randomUUID(),
+      path.slice(0, 500),
+      referrer ? String(referrer).slice(0, 1000) : null,
+      (req.headers['user-agent'] || '').slice(0, 500) || null,
+      (req.ip || req.headers['x-forwarded-for'] as string || '').slice(0, 45) || null,
+      sessionId ? String(sessionId).slice(0, 100) : null,
+    );
 
     res.json({ success: true });
   } catch (error) {
@@ -41,16 +40,17 @@ router.post('/play', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'trackId and trackName are required' });
     }
 
-    await db.trackPlay.create({
-      data: {
-        trackId: String(trackId).slice(0, 200),
-        trackName: String(trackName).slice(0, 500),
-        releaseId: releaseId ? String(releaseId).slice(0, 200) : null,
-        releaseName: releaseName ? String(releaseName).slice(0, 500) : null,
-        sessionId: sessionId ? String(sessionId).slice(0, 100) : null,
-        ip: (req.ip || req.headers['x-forwarded-for'] as string || '').slice(0, 45) || null,
-      },
-    });
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO track_plays (id, track_id, track_name, release_id, release_name, session_id, ip, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+      randomUUID(),
+      String(trackId).slice(0, 200),
+      String(trackName).slice(0, 500),
+      releaseId ? String(releaseId).slice(0, 200) : null,
+      releaseName ? String(releaseName).slice(0, 500) : null,
+      sessionId ? String(sessionId).slice(0, 100) : null,
+      (req.ip || req.headers['x-forwarded-for'] as string || '').slice(0, 45) || null,
+    );
 
     res.json({ success: true });
   } catch (error) {
@@ -62,31 +62,22 @@ router.post('/play', async (req: Request, res: Response) => {
 // GET /analytics/plays - Get play counts (public, for displaying on music pages)
 router.get('/plays', async (_req: Request, res: Response) => {
   try {
-    // Get total plays per track
-    const trackPlays: any[] = await db.trackPlay.groupBy({
-      by: ['trackId', 'trackName'],
-      _count: { id: true },
-      orderBy: { _count: { id: 'desc' } },
-    });
+    const trackPlays = await prisma.$queryRawUnsafe<{ track_id: string; count: string }[]>(
+      `SELECT track_id, COUNT(*)::text as count FROM track_plays GROUP BY track_id ORDER BY COUNT(*) DESC`
+    );
 
-    // Get total plays per release
-    const releasePlays: any[] = await db.trackPlay.groupBy({
-      by: ['releaseId', 'releaseName'],
-      _count: { id: true },
-      where: { releaseId: { not: null } },
-      orderBy: { _count: { id: 'desc' } },
-    });
+    const releasePlays = await prisma.$queryRawUnsafe<{ release_id: string; count: string }[]>(
+      `SELECT release_id, COUNT(*)::text as count FROM track_plays WHERE release_id IS NOT NULL GROUP BY release_id ORDER BY COUNT(*) DESC`
+    );
 
     const tracks: Record<string, number> = {};
     for (const t of trackPlays) {
-      tracks[t.trackId] = t._count.id;
+      tracks[t.track_id] = parseInt(t.count);
     }
 
     const releases: Record<string, number> = {};
     for (const r of releasePlays) {
-      if (r.releaseId) {
-        releases[r.releaseId] = r._count.id;
-      }
+      releases[r.release_id] = parseInt(r.count);
     }
 
     res.json({ tracks, releases });

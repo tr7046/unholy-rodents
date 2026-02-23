@@ -3,41 +3,37 @@ import { prisma } from '../../db';
 
 const router = Router();
 
-// Type-safe prisma access for new models (types generated at build time)
-const db = prisma as any;
-
 // GET /admin/analytics/overview - Dashboard overview stats
 router.get('/overview', async (req: Request, res: Response) => {
   try {
     const days = parseInt(req.query.days as string) || 30;
-    const since = new Date();
-    since.setDate(since.getDate() - days);
 
-    const [
-      totalPageViews,
-      totalPlays,
-      recentPageViews,
-      recentPlays,
-      uniqueVisitors,
-    ] = await Promise.all([
-      db.pageView.count(),
-      db.trackPlay.count(),
-      db.pageView.count({ where: { createdAt: { gte: since } } }),
-      db.trackPlay.count({ where: { createdAt: { gte: since } } }),
-      db.pageView.groupBy({
-        by: ['sessionId'],
-        where: { createdAt: { gte: since }, sessionId: { not: null } },
-      }),
-    ]);
+    const stats = await prisma.$queryRawUnsafe<{
+      total_page_views: string;
+      total_plays: string;
+      recent_page_views: string;
+      recent_plays: string;
+      unique_visitors: string;
+    }[]>(
+      `SELECT
+        (SELECT COUNT(*) FROM page_views)::text AS total_page_views,
+        (SELECT COUNT(*) FROM track_plays)::text AS total_plays,
+        (SELECT COUNT(*) FROM page_views WHERE created_at >= NOW() - INTERVAL '1 day' * $1)::text AS recent_page_views,
+        (SELECT COUNT(*) FROM track_plays WHERE created_at >= NOW() - INTERVAL '1 day' * $1)::text AS recent_plays,
+        (SELECT COUNT(DISTINCT session_id) FROM page_views WHERE created_at >= NOW() - INTERVAL '1 day' * $1 AND session_id IS NOT NULL)::text AS unique_visitors`,
+      days
+    );
+
+    const s = stats[0];
 
     res.json({
       success: true,
       data: {
-        totalPageViews,
-        totalPlays,
-        recentPageViews,
-        recentPlays,
-        uniqueVisitors: (uniqueVisitors as any[]).length,
+        totalPageViews: parseInt(s.total_page_views),
+        totalPlays: parseInt(s.total_plays),
+        recentPageViews: parseInt(s.recent_page_views),
+        recentPlays: parseInt(s.recent_plays),
+        uniqueVisitors: parseInt(s.unique_visitors),
         period: days,
       },
     });
@@ -51,41 +47,35 @@ router.get('/overview', async (req: Request, res: Response) => {
 router.get('/pageviews', async (req: Request, res: Response) => {
   try {
     const days = parseInt(req.query.days as string) || 30;
-    const since = new Date();
-    since.setDate(since.getDate() - days);
 
-    // Get daily page view counts using raw SQL for date grouping
-    const dailyViews = await prisma.$queryRawUnsafe<
-      { date: string; count: string }[]
-    >(
-      `SELECT DATE(created_at) as date, COUNT(*)::text as count
+    const dailyViews = await prisma.$queryRawUnsafe<{ date: string; count: string }[]>(
+      `SELECT DATE(created_at)::text as date, COUNT(*)::text as count
        FROM page_views
-       WHERE created_at >= $1
+       WHERE created_at >= NOW() - INTERVAL '1 day' * $1
        GROUP BY DATE(created_at)
        ORDER BY date ASC`,
-      since
+      days
     );
 
-    // Top pages
-    const topPages: any[] = await db.pageView.groupBy({
-      by: ['path'],
-      _count: { id: true },
-      where: { createdAt: { gte: since } },
-      orderBy: { _count: { id: 'desc' } },
-      take: 20,
-    });
+    const topPages = await prisma.$queryRawUnsafe<{ path: string; count: string }[]>(
+      `SELECT path, COUNT(*)::text as count
+       FROM page_views
+       WHERE created_at >= NOW() - INTERVAL '1 day' * $1
+       GROUP BY path
+       ORDER BY COUNT(*) DESC
+       LIMIT 20`,
+      days
+    );
 
-    // Top referrers
-    const topReferrers: any[] = await db.pageView.groupBy({
-      by: ['referrer'],
-      _count: { id: true },
-      where: {
-        createdAt: { gte: since },
-        referrer: { not: null },
-      },
-      orderBy: { _count: { id: 'desc' } },
-      take: 10,
-    });
+    const topReferrers = await prisma.$queryRawUnsafe<{ referrer: string; count: string }[]>(
+      `SELECT referrer, COUNT(*)::text as count
+       FROM page_views
+       WHERE created_at >= NOW() - INTERVAL '1 day' * $1 AND referrer IS NOT NULL
+       GROUP BY referrer
+       ORDER BY COUNT(*) DESC
+       LIMIT 10`,
+      days
+    );
 
     res.json({
       success: true,
@@ -94,16 +84,14 @@ router.get('/pageviews', async (req: Request, res: Response) => {
           date: d.date,
           views: parseInt(d.count),
         })),
-        topPages: topPages.map((p: any) => ({
+        topPages: topPages.map((p) => ({
           path: p.path,
-          views: p._count.id,
+          views: parseInt(p.count),
         })),
-        topReferrers: topReferrers
-          .filter((r: any) => r.referrer)
-          .map((r: any) => ({
-            referrer: r.referrer,
-            views: r._count.id,
-          })),
+        topReferrers: topReferrers.map((r) => ({
+          referrer: r.referrer,
+          views: parseInt(r.count),
+        })),
       },
     });
   } catch (error) {
@@ -116,44 +104,39 @@ router.get('/pageviews', async (req: Request, res: Response) => {
 router.get('/plays', async (req: Request, res: Response) => {
   try {
     const days = parseInt(req.query.days as string) || 30;
-    const since = new Date();
-    since.setDate(since.getDate() - days);
 
-    // Daily play counts
-    const dailyPlays = await prisma.$queryRawUnsafe<
-      { date: string; count: string }[]
-    >(
-      `SELECT DATE(created_at) as date, COUNT(*)::text as count
+    const dailyPlays = await prisma.$queryRawUnsafe<{ date: string; count: string }[]>(
+      `SELECT DATE(created_at)::text as date, COUNT(*)::text as count
        FROM track_plays
-       WHERE created_at >= $1
+       WHERE created_at >= NOW() - INTERVAL '1 day' * $1
        GROUP BY DATE(created_at)
        ORDER BY date ASC`,
-      since
+      days
     );
 
-    // Top tracks
-    const topTracks: any[] = await db.trackPlay.groupBy({
-      by: ['trackId', 'trackName'],
-      _count: { id: true },
-      where: { createdAt: { gte: since } },
-      orderBy: { _count: { id: 'desc' } },
-      take: 20,
-    });
+    const topTracks = await prisma.$queryRawUnsafe<{ track_id: string; track_name: string; count: string }[]>(
+      `SELECT track_id, track_name, COUNT(*)::text as count
+       FROM track_plays
+       WHERE created_at >= NOW() - INTERVAL '1 day' * $1
+       GROUP BY track_id, track_name
+       ORDER BY COUNT(*) DESC
+       LIMIT 20`,
+      days
+    );
 
-    // Top releases
-    const topReleases: any[] = await db.trackPlay.groupBy({
-      by: ['releaseId', 'releaseName'],
-      _count: { id: true },
-      where: {
-        createdAt: { gte: since },
-        releaseId: { not: null },
-      },
-      orderBy: { _count: { id: 'desc' } },
-      take: 10,
-    });
+    const topReleases = await prisma.$queryRawUnsafe<{ release_id: string; release_name: string; count: string }[]>(
+      `SELECT release_id, release_name, COUNT(*)::text as count
+       FROM track_plays
+       WHERE created_at >= NOW() - INTERVAL '1 day' * $1 AND release_id IS NOT NULL
+       GROUP BY release_id, release_name
+       ORDER BY COUNT(*) DESC
+       LIMIT 10`,
+      days
+    );
 
-    // Total plays all time
-    const totalPlays = await db.trackPlay.count();
+    const totalResult = await prisma.$queryRawUnsafe<{ count: string }[]>(
+      `SELECT COUNT(*)::text as count FROM track_plays`
+    );
 
     res.json({
       success: true,
@@ -162,19 +145,17 @@ router.get('/plays', async (req: Request, res: Response) => {
           date: d.date,
           plays: parseInt(d.count),
         })),
-        topTracks: topTracks.map((t: any) => ({
-          trackId: t.trackId,
-          trackName: t.trackName,
-          plays: t._count.id,
+        topTracks: topTracks.map((t) => ({
+          trackId: t.track_id,
+          trackName: t.track_name,
+          plays: parseInt(t.count),
         })),
-        topReleases: topReleases
-          .filter((r: any) => r.releaseId)
-          .map((r: any) => ({
-            releaseId: r.releaseId,
-            releaseName: r.releaseName,
-            plays: r._count.id,
-          })),
-        totalPlays,
+        topReleases: topReleases.map((r) => ({
+          releaseId: r.release_id,
+          releaseName: r.release_name,
+          plays: parseInt(r.count),
+        })),
+        totalPlays: parseInt(totalResult[0]?.count || '0'),
       },
     });
   } catch (error) {
@@ -186,35 +167,42 @@ router.get('/plays', async (req: Request, res: Response) => {
 // GET /admin/analytics/realtime - Recent activity
 router.get('/realtime', async (_req: Request, res: Response) => {
   try {
-    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const realtimeStats = await prisma.$queryRawUnsafe<{
+      active_visitors: string;
+      last_hour_views: string;
+      last_hour_plays: string;
+    }[]>(
+      `SELECT
+        (SELECT COUNT(DISTINCT session_id) FROM page_views WHERE created_at >= NOW() - INTERVAL '5 minutes' AND session_id IS NOT NULL)::text AS active_visitors,
+        (SELECT COUNT(*) FROM page_views WHERE created_at >= NOW() - INTERVAL '1 hour')::text AS last_hour_views,
+        (SELECT COUNT(*) FROM track_plays WHERE created_at >= NOW() - INTERVAL '1 hour')::text AS last_hour_plays`
+    );
 
-    const [activeNow, lastHourViews, lastHourPlays, recentPlays] = await Promise.all([
-      db.pageView.groupBy({
-        by: ['sessionId'],
-        where: { createdAt: { gte: fiveMinAgo }, sessionId: { not: null } },
-      }),
-      db.pageView.count({ where: { createdAt: { gte: oneHourAgo } } }),
-      db.trackPlay.count({ where: { createdAt: { gte: oneHourAgo } } }),
-      db.trackPlay.findMany({
-        where: { createdAt: { gte: oneHourAgo } },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-        select: {
-          trackName: true,
-          releaseName: true,
-          createdAt: true,
-        },
-      }),
-    ]);
+    const recentPlays = await prisma.$queryRawUnsafe<{
+      track_name: string;
+      release_name: string | null;
+      created_at: Date;
+    }[]>(
+      `SELECT track_name, release_name, created_at
+       FROM track_plays
+       WHERE created_at >= NOW() - INTERVAL '1 hour'
+       ORDER BY created_at DESC
+       LIMIT 10`
+    );
+
+    const s = realtimeStats[0];
 
     res.json({
       success: true,
       data: {
-        activeVisitors: (activeNow as any[]).length,
-        lastHourViews,
-        lastHourPlays,
-        recentPlays,
+        activeVisitors: parseInt(s.active_visitors),
+        lastHourViews: parseInt(s.last_hour_views),
+        lastHourPlays: parseInt(s.last_hour_plays),
+        recentPlays: recentPlays.map((p) => ({
+          trackName: p.track_name,
+          releaseName: p.release_name,
+          createdAt: p.created_at,
+        })),
       },
     });
   } catch (error) {

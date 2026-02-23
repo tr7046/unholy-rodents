@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
@@ -9,6 +9,7 @@ import {
   EyeSlashIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline';
 
 // ============================================
@@ -495,6 +496,11 @@ export default function SettingsPage() {
   const [socials, setSocials] = useState<SocialLinks>(defaultSocials);
   const [isSavingSocials, setIsSavingSocials] = useState(false);
   const [socialsSaveStatus, setSocialsSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [ogImage, setOgImage] = useState('');
+  const [isUploadingOg, setIsUploadingOg] = useState(false);
+  const [isSavingOg, setIsSavingOg] = useState(false);
+  const [ogSaveStatus, setOgSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const ogFileRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -507,9 +513,10 @@ export default function SettingsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [paymentRes, socialsRes] = await Promise.all([
+        const [paymentRes, socialsRes, siteConfigRes] = await Promise.all([
           fetch('/api/admin/payment-config'),
           fetch('/api/admin/socials'),
+          fetch('/api/admin/site-config'),
         ]);
         if (paymentRes.ok) {
           const data = await paymentRes.json();
@@ -518,6 +525,10 @@ export default function SettingsPage() {
         if (socialsRes.ok) {
           const data = await socialsRes.json();
           setSocials({ ...defaultSocials, ...data });
+        }
+        if (siteConfigRes.ok) {
+          const data = await siteConfigRes.json();
+          if (data.ogImage) setOgImage(data.ogImage);
         }
       } catch (error) {
         console.error('Failed to load settings:', error);
@@ -556,6 +567,69 @@ export default function SettingsPage() {
     } finally {
       setIsSavingSocials(false);
     }
+  };
+
+  // Upload OG image
+  const handleOgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be under 5MB');
+      return;
+    }
+
+    setIsUploadingOg(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', 'site');
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      setOgImage(data.url);
+      // Auto-save after upload
+      await saveOgImage(data.url);
+    } catch (err) {
+      console.error('OG image upload failed:', err);
+      alert('Failed to upload image');
+    } finally {
+      setIsUploadingOg(false);
+      if (ogFileRef.current) ogFileRef.current.value = '';
+    }
+  };
+
+  // Save OG image config
+  const saveOgImage = async (url?: string) => {
+    setIsSavingOg(true);
+    try {
+      const res = await fetch('/api/admin/site-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ogImage: url ?? ogImage }),
+      });
+      if (res.ok) {
+        setOgSaveStatus('success');
+        setTimeout(() => setOgSaveStatus('idle'), 3000);
+      } else {
+        throw new Error('Save failed');
+      }
+    } catch {
+      setOgSaveStatus('error');
+      setTimeout(() => setOgSaveStatus('idle'), 3000);
+    } finally {
+      setIsSavingOg(false);
+    }
+  };
+
+  // Remove OG image
+  const removeOgImage = async () => {
+    setOgImage('');
+    await saveOgImage('');
   };
 
   // Update provider config
@@ -678,6 +752,88 @@ export default function SettingsPage() {
               <ExclamationTriangleIcon className="w-4 h-4" /> Error saving
             </span>
           )}
+        </div>
+      </div>
+
+      {/* Link Preview / OG Image Section */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-[#f5f5f0]">Link Preview Image</h2>
+            <p className="text-sm text-[#888]">
+              This image appears when your site is shared on social media, Discord, iMessage, etc.
+              Recommended size: 1200 x 630 pixels.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {ogSaveStatus === 'success' && (
+              <span className="flex items-center gap-1 text-green-500 text-sm">
+                <CheckCircleIcon className="w-4 h-4" /> Saved
+              </span>
+            )}
+            {ogSaveStatus === 'error' && (
+              <span className="flex items-center gap-1 text-red-500 text-sm">
+                <ExclamationTriangleIcon className="w-4 h-4" /> Error
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4">
+          {ogImage ? (
+            <div className="space-y-4">
+              <div className="relative aspect-[1200/630] bg-[#0a0a0a] rounded-lg overflow-hidden border border-[#333]">
+                <img
+                  src={ogImage}
+                  alt="OG preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => ogFileRef.current?.click()}
+                  disabled={isUploadingOg}
+                  className="px-4 py-2 bg-[#252525] hover:bg-[#333] text-[#f5f5f0] rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  Replace Image
+                </button>
+                <button
+                  type="button"
+                  onClick={removeOgImage}
+                  disabled={isSavingOg}
+                  className="px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => ogFileRef.current?.click()}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') ogFileRef.current?.click(); }}
+              className="aspect-[1200/630] bg-[#0a0a0a] rounded-lg border-2 border-dashed border-[#333] hover:border-[#c41e3a] transition-colors flex flex-col items-center justify-center cursor-pointer"
+            >
+              {isUploadingOg ? (
+                <ArrowPathIcon className="w-10 h-10 text-[#888] animate-spin" />
+              ) : (
+                <>
+                  <PhotoIcon className="w-12 h-12 text-[#555] mb-3" />
+                  <p className="text-sm text-[#888] font-medium">Click to upload preview image</p>
+                  <p className="text-xs text-[#555] mt-1">JPG, PNG, or WebP &middot; 1200 x 630px recommended</p>
+                </>
+              )}
+            </div>
+          )}
+          <input
+            ref={ogFileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleOgUpload}
+            className="hidden"
+          />
         </div>
       </div>
 

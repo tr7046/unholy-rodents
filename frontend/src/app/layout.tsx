@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk, Anton, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
@@ -30,55 +32,72 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export const metadata: Metadata = {
-  metadataBase: new URL('https://unholyrodents.com'),
-  title: {
-    default: 'Unholy Rodents | Squirrelcore from Central Florida',
-    template: '%s | Unholy Rodents',
-  },
-  description: 'Official website of Unholy Rodents - Squirrelcore from Central Florida. Squirrels who serve Squātan. Hail Squātan. Fuck Animal Control. Stay Nuts.',
-  keywords: ['squirrelcore', 'thrash punk', 'punk rock', 'metal', 'underground music', 'Unholy Rodents', 'Squātan', 'Central Florida', 'Orlando', 'hardcore', 'crossover thrash'],
-  authors: [{ name: 'Unholy Rodents' }],
-  creator: 'Unholy Rodents',
-  publisher: 'Unholy Rodents',
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+async function getSiteConfig(): Promise<{ ogImage: string }> {
+  try {
+    const res = await fetch(`${API_URL}/content/site-config`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return { ogImage: '' };
+    return await res.json();
+  } catch {
+    return { ogImage: '' };
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const siteConfig = await getSiteConfig();
+  const ogImage = siteConfig.ogImage || '/og-image.jpg';
+
+  return {
+    metadataBase: new URL('https://unholyrodents.com'),
+    title: {
+      default: 'Unholy Rodents | Squirrelcore from Central Florida',
+      template: '%s | Unholy Rodents',
+    },
+    description: 'Official website of Unholy Rodents - Squirrelcore from Central Florida. Squirrels who serve Squātan. Hail Squātan. Fuck Animal Control. Stay Nuts.',
+    keywords: ['squirrelcore', 'thrash punk', 'punk rock', 'metal', 'underground music', 'Unholy Rodents', 'Squātan', 'Central Florida', 'Orlando', 'hardcore', 'crossover thrash'],
+    authors: [{ name: 'Unholy Rodents' }],
+    creator: 'Unholy Rodents',
+    publisher: 'Unholy Rodents',
+    robots: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  openGraph: {
-    title: 'Unholy Rodents | Squirrelcore from Central Florida',
-    description: 'Squirrelcore from Central Florida. Squirrels who serve Squātan. Hail Squātan. Fuck Animal Control. Stay Nuts.',
-    type: 'website',
-    locale: 'en_US',
-    siteName: 'Unholy Rodents',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Unholy Rodents - Squirrelcore',
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
       },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Unholy Rodents | Squirrelcore',
-    description: 'Squirrelcore from Central Florida. Hail Squātan. Fuck Animal Control. Stay Nuts.',
-    images: ['/og-image.jpg'],
-  },
-  icons: {
-    icon: '/icon',
-    apple: '/apple-icon',
-  },
-  manifest: '/manifest.json',
-};
+    },
+    openGraph: {
+      title: 'Unholy Rodents | Squirrelcore from Central Florida',
+      description: 'Squirrelcore from Central Florida. Squirrels who serve Squātan. Hail Squātan. Fuck Animal Control. Stay Nuts.',
+      type: 'website',
+      locale: 'en_US',
+      siteName: 'Unholy Rodents',
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: 'Unholy Rodents - Squirrelcore',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'Unholy Rodents | Squirrelcore',
+      description: 'Squirrelcore from Central Florida. Hail Squātan. Fuck Animal Control. Stay Nuts.',
+      images: [ogImage],
+    },
+    icons: {
+      icon: '/icon',
+      apple: '/apple-icon',
+    },
+    manifest: '/manifest.json',
+  };
+}
 
 export default function RootLayout({
   children,

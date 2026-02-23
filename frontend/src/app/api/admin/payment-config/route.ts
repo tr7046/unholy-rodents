@@ -15,7 +15,10 @@ export async function GET() {
 
     const response = await fetch(`${API_URL}/admin/payment-config`, {
       cache: 'no-store',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
+      },
     });
 
     if (!response.ok) {
@@ -40,7 +43,10 @@ export async function PUT(request: NextRequest) {
 
     const response = await fetch(`${API_URL}/admin/payment-config`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
+      },
       body: JSON.stringify(body),
     });
 
@@ -67,7 +73,10 @@ export async function POST(request: NextRequest) {
 
     const response = await fetch(`${API_URL}/admin/payment-config/test`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
+      },
       body: JSON.stringify(body),
     });
 

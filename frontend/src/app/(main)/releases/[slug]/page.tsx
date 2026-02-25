@@ -214,7 +214,7 @@ export default function ReleasePage({ params }: { params: Promise<{ slug: string
       <NoiseOverlay />
 
       {/* Hero */}
-      <section className="py-16 bg-void relative overflow-hidden">
+      <section className="pt-12 pb-8 bg-void relative overflow-hidden">
         <motion.div
           className="absolute top-0 left-1/4 w-96 h-96 bg-blood/10 rounded-full blur-3xl"
           animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.2, 0.1] }}
@@ -251,7 +251,7 @@ export default function ReleasePage({ params }: { params: Promise<{ slug: string
             <FadeUp delay={0.1}>
               <div>
                 <span className="tag mb-4 inline-block">{release.type.toUpperCase()}</span>
-                <h1 className="text-4xl md:text-5xl font-display text-paper mb-3">{release.title}</h1>
+                <h1 className="text-4xl md:text-5xl font-display text-paper mb-3 break-words">{release.title}</h1>
                 {releaseDate && (
                   <p className="text-concrete mb-6">{releaseDate}</p>
                 )}
@@ -307,7 +307,7 @@ export default function ReleasePage({ params }: { params: Promise<{ slug: string
       </section>
 
       {/* Tracklist */}
-      <section className="section bg-charcoal">
+      <section className="py-12 bg-charcoal">
         <div className="container mx-auto px-4">
           <FadeUp>
             <h2 className="text-paper mb-8">TRACKLIST</h2>

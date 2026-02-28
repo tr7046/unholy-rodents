@@ -31,7 +31,8 @@ interface AudioPlayerState {
   isVisible: boolean;
 }
 
-// Global audio player state (singleton)
+// ─── Module-level audio engine (singleton, lives outside React) ───
+
 let globalState: AudioPlayerState = {
   tracks: [],
   currentIndex: 0,
@@ -39,11 +40,87 @@ let globalState: AudioPlayerState = {
   isVisible: false,
 };
 
+let globalHowl: Howl | null = null;
+let globalVolume = 0.8;
+let globalMuted = false;
+
 const listeners = new Set<() => void>();
 
 function notify() {
   listeners.forEach((fn) => fn());
 }
+
+// Extract audio format from URL so Howler can detect codec support
+function getAudioFormat(url: string): string | undefined {
+  // Check for file extension in URL (before query params)
+  const match = url.match(/\.(mp3|mp4|m4a|aac|wav|ogg|webm|flac|opus)(?:[?#]|$)/i);
+  return match ? match[1].toLowerCase() : undefined;
+}
+
+// Core: create Howl and play. MUST be called synchronously from user gesture
+// handlers so Safari allows the play() call.
+function loadAndPlay(url: string) {
+  if (globalHowl) {
+    globalHowl.unload();
+  }
+
+  const fmt = getAudioFormat(url);
+
+  globalHowl = new Howl({
+    src: [url],
+    html5: true,
+    volume: globalMuted ? 0 : globalVolume,
+    ...(fmt ? { format: [fmt] } : {}),
+    onplay: () => {
+      globalState = { ...globalState, isPlaying: true };
+      notify();
+    },
+    onpause: () => {
+      globalState = { ...globalState, isPlaying: false };
+      notify();
+    },
+    onend: () => {
+      // Auto-advance to next track (audio context is already unlocked)
+      if (globalState.currentIndex < globalState.tracks.length - 1) {
+        const nextIdx = globalState.currentIndex + 1;
+        const nextTrack = globalState.tracks[nextIdx];
+        globalState = { ...globalState, currentIndex: nextIdx, isPlaying: true };
+        loadAndPlay(nextTrack.audioUrl);
+        trackPlay({
+          trackId: nextTrack.trackId || nextTrack.audioUrl,
+          trackName: nextTrack.title,
+          releaseId: nextTrack.releaseId,
+          releaseName: nextTrack.releaseTitle,
+        });
+        notify();
+      } else {
+        globalState = { ...globalState, isPlaying: false };
+        notify();
+      }
+    },
+    onload: () => {
+      // Trigger re-render so component picks up duration
+      notify();
+    },
+    onloaderror: (_id: number, err: unknown) => {
+      console.error('[AudioPlayer] Load error:', err);
+      globalState = { ...globalState, isPlaying: false };
+      notify();
+    },
+    onplayerror: () => {
+      // Safari autoplay fallback: wait for audio unlock then retry
+      if (globalHowl) {
+        globalHowl.once('unlock', () => {
+          globalHowl?.play();
+        });
+      }
+    },
+  });
+
+  globalHowl.play();
+}
+
+// ─── Public API (called from music pages — synchronous with user click) ───
 
 export function playTrack(track: PlayerTrack) {
   globalState = {
@@ -52,6 +129,13 @@ export function playTrack(track: PlayerTrack) {
     isPlaying: true,
     isVisible: true,
   };
+  loadAndPlay(track.audioUrl);
+  trackPlay({
+    trackId: track.trackId || track.audioUrl,
+    trackName: track.title,
+    releaseId: track.releaseId,
+    releaseName: track.releaseTitle,
+  });
   notify();
 }
 
@@ -62,13 +146,27 @@ export function playAlbum(tracks: PlayerTrack[], startIndex = 0) {
     isPlaying: true,
     isVisible: true,
   };
+  const track = tracks[startIndex];
+  loadAndPlay(track.audioUrl);
+  trackPlay({
+    trackId: track.trackId || track.audioUrl,
+    trackName: track.title,
+    releaseId: track.releaseId,
+    releaseName: track.releaseTitle,
+  });
   notify();
 }
 
 export function closePlayer() {
+  if (globalHowl) {
+    globalHowl.unload();
+    globalHowl = null;
+  }
   globalState = { ...globalState, isPlaying: false, isVisible: false };
   notify();
 }
+
+// ─── React hook to subscribe to global state ───
 
 function usePlayerState() {
   const [, setTick] = useState(0);
@@ -89,39 +187,35 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+// ─── Component ───
+
 export default function AudioPlayer() {
   const state = usePlayerState();
-  const howlRef = useRef<Howl | null>(null);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0.8);
-  const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState(globalVolume);
+  const [muted, setMuted] = useState(globalMuted);
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
   const rafRef = useRef<number>(0);
-  const loadedUrlRef = useRef<string>('');
-  const gapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seekBarRef = useRef<HTMLDivElement>(null);
-  // Use a ref for isPlaying so the RAF loop never has stale closure
-  const isPlayingRef = useRef(false);
-  // Track if we're in a drag to avoid seeking on every mousemove
   const isDraggingRef = useRef(false);
   const pendingSeekRef = useRef<number | null>(null);
 
   const currentTrack = state.tracks[state.currentIndex];
 
-  // Keep isPlayingRef in sync
-  useEffect(() => {
-    isPlayingRef.current = state.isPlaying;
-  }, [state.isPlaying]);
-
+  // Progress + duration loop
   const startProgressLoop = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
     const tick = () => {
-      if (howlRef.current && isPlayingRef.current && !isDraggingRef.current) {
-        const seek = howlRef.current.seek();
+      if (globalHowl && !isDraggingRef.current) {
+        const seek = globalHowl.seek();
         if (typeof seek === 'number' && isFinite(seek)) {
           setProgress(seek);
+        }
+        const dur = globalHowl.duration();
+        if (dur && isFinite(dur)) {
+          setDuration(dur);
         }
       }
       rafRef.current = requestAnimationFrame(tick);
@@ -133,128 +227,100 @@ export default function AudioPlayer() {
     cancelAnimationFrame(rafRef.current);
   }, []);
 
-  // Load and play track when it changes
+  // Start/stop progress loop based on playing state
   useEffect(() => {
-    if (!currentTrack?.audioUrl) return;
-    if (loadedUrlRef.current === currentTrack.audioUrl && howlRef.current) {
-      // Same track, just toggle play/pause
-      if (state.isPlaying) {
-        if (!howlRef.current.playing()) {
-          howlRef.current.play();
-        }
-        startProgressLoop();
-      } else {
-        howlRef.current.pause();
-        stopProgressLoop();
-      }
-      return;
-    }
-
-    // New track - destroy old and create new
-    if (howlRef.current) {
-      howlRef.current.unload();
-    }
-    stopProgressLoop();
-
-    loadedUrlRef.current = currentTrack.audioUrl;
-
-    const howl = new Howl({
-      src: [currentTrack.audioUrl],
-      html5: true,
-      volume: muted ? 0 : volume,
-      onplay: () => {
-        setDuration(howl.duration());
-        startProgressLoop();
-      },
-      onend: () => {
-        stopProgressLoop();
-        // Auto-advance to next track with a 1-second pause
-        if (state.currentIndex < state.tracks.length - 1) {
-          globalState = { ...globalState, isPlaying: false };
-          notify();
-          gapTimerRef.current = setTimeout(() => {
-            loadedUrlRef.current = '';
-            globalState = { ...globalState, currentIndex: state.currentIndex + 1, isPlaying: true };
-            notify();
-          }, 1000);
-        } else {
-          globalState = { ...globalState, isPlaying: false };
-          notify();
-        }
-      },
-      onload: () => {
-        setDuration(howl.duration());
-      },
-    });
-
-    howlRef.current = howl;
-
     if (state.isPlaying) {
-      howl.play();
-      // Record listen event for analytics
-      trackPlay({
-        trackId: currentTrack.trackId || currentTrack.audioUrl,
-        trackName: currentTrack.title,
-        releaseId: currentTrack.releaseId,
-        releaseName: currentTrack.releaseTitle,
-      });
-    }
-
-    return () => {
+      startProgressLoop();
+    } else {
       stopProgressLoop();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTrack?.audioUrl, state.isPlaying, state.currentIndex]);
+    }
+    return () => stopProgressLoop();
+  }, [state.isPlaying, state.currentIndex, startProgressLoop, stopProgressLoop]);
 
-  // Update volume
+  // Sync volume to module-level state and active Howl
   useEffect(() => {
-    if (howlRef.current) {
-      howlRef.current.volume(muted ? 0 : volume);
+    globalVolume = volume;
+    globalMuted = muted;
+    if (globalHowl) {
+      globalHowl.volume(muted ? 0 : volume);
     }
   }, [volume, muted]);
+
+  // Reset progress when track changes
+  useEffect(() => {
+    setProgress(0);
+    setDuration(0);
+  }, [state.currentIndex]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (howlRef.current) {
-        howlRef.current.unload();
-      }
-      if (gapTimerRef.current) {
-        clearTimeout(gapTimerRef.current);
-      }
       stopProgressLoop();
     };
   }, [stopProgressLoop]);
 
+  // ─── Handlers (synchronous with user gesture for Safari) ───
+
   function togglePlay() {
-    globalState = { ...globalState, isPlaying: !state.isPlaying };
-    notify();
+    if (!globalHowl) return;
+    if (state.isPlaying) {
+      globalHowl.pause();
+    } else {
+      globalHowl.play();
+    }
   }
 
   function prevTrack() {
     if (state.currentIndex > 0) {
-      loadedUrlRef.current = '';
-      globalState = { ...globalState, currentIndex: state.currentIndex - 1, isPlaying: true };
+      const newIndex = state.currentIndex - 1;
+      const track = state.tracks[newIndex];
+      globalState = { ...globalState, currentIndex: newIndex, isPlaying: true };
+      loadAndPlay(track.audioUrl);
+      trackPlay({
+        trackId: track.trackId || track.audioUrl,
+        trackName: track.title,
+        releaseId: track.releaseId,
+        releaseName: track.releaseTitle,
+      });
       notify();
     }
   }
 
   function nextTrack() {
     if (state.currentIndex < state.tracks.length - 1) {
-      loadedUrlRef.current = '';
-      globalState = { ...globalState, currentIndex: state.currentIndex + 1, isPlaying: true };
+      const newIndex = state.currentIndex + 1;
+      const track = state.tracks[newIndex];
+      globalState = { ...globalState, currentIndex: newIndex, isPlaying: true };
+      loadAndPlay(track.audioUrl);
+      trackPlay({
+        trackId: track.trackId || track.audioUrl,
+        trackName: track.title,
+        releaseId: track.releaseId,
+        releaseName: track.releaseTitle,
+      });
       notify();
     }
   }
 
-  // Commit a seek — actually move the audio position
+  function playFromPlaylist(index: number) {
+    const track = state.tracks[index];
+    globalState = { ...globalState, currentIndex: index, isPlaying: true };
+    loadAndPlay(track.audioUrl);
+    trackPlay({
+      trackId: track.trackId || track.audioUrl,
+      trackName: track.title,
+      releaseId: track.releaseId,
+      releaseName: track.releaseTitle,
+    });
+    notify();
+  }
+
   function commitSeek(time: number) {
-    if (!howlRef.current) return;
-    howlRef.current.seek(time);
+    if (!globalHowl) return;
+    globalHowl.seek(time);
     setProgress(time);
   }
 
-  // During drag: only update visual progress, don't seek the audio
   function handleSeekMouseDown(e: React.MouseEvent<HTMLDivElement>) {
     if (!seekBarRef.current || !duration) return;
     isDraggingRef.current = true;
@@ -317,29 +383,20 @@ export default function AudioPlayer() {
   }
 
   function skipForward() {
-    if (!howlRef.current || !duration) return;
-    const current = howlRef.current.seek() as number;
+    if (!globalHowl || !duration) return;
+    const current = globalHowl.seek() as number;
     const time = Math.min(duration, current + 15);
     commitSeek(time);
   }
 
   function skipBackward() {
-    if (!howlRef.current) return;
-    const current = howlRef.current.seek() as number;
+    if (!globalHowl) return;
+    const current = globalHowl.seek() as number;
     const time = Math.max(0, current - 15);
     commitSeek(time);
   }
 
   function handleClose() {
-    if (howlRef.current) {
-      howlRef.current.unload();
-      howlRef.current = null;
-    }
-    if (gapTimerRef.current) {
-      clearTimeout(gapTimerRef.current);
-      gapTimerRef.current = null;
-    }
-    loadedUrlRef.current = '';
     stopProgressLoop();
     setProgress(0);
     setDuration(0);
@@ -358,11 +415,7 @@ export default function AudioPlayer() {
           {state.tracks.map((track, i) => (
             <button
               key={i}
-              onClick={() => {
-                loadedUrlRef.current = '';
-                globalState = { ...globalState, currentIndex: i, isPlaying: true };
-                notify();
-              }}
+              onClick={() => playFromPlaylist(i)}
               className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-[#252525] transition-colors text-left ${
                 i === state.currentIndex ? 'bg-[#252525] text-[#c41e3a]' : 'text-[#f5f5f0]'
               }`}

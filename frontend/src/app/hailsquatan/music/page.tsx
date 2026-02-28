@@ -640,7 +640,7 @@ function ReleaseModal({
                       <label className="flex items-center gap-2 px-3 py-1.5 border border-dashed border-[#444] rounded-lg text-[#888888] hover:text-[#f5f5f0] hover:border-[#c41e3a] cursor-pointer transition-colors text-xs">
                         <input
                           type="file"
-                          accept="audio/*"
+                          accept=".mp3,.m4a,.aac,.wav,.mp4,.flac,audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,audio/wav,audio/flac"
                           onChange={(e) => handleAudioUpload(index, e)}
                           className="hidden"
                         />

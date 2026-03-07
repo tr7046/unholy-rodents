@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { timingSafeEqual } from 'crypto';
 import prisma from '../db';
 
 export interface AuthRequest extends Request {
@@ -69,11 +70,12 @@ export const authenticateInternal = async (
   next: NextFunction
 ) => {
   // Check internal API key first (used by Next.js server-to-server calls)
-  // Reuses JWT_SECRET so no extra env var is needed on the backend
   const apiKey = req.headers['x-internal-api-key'] as string;
-  const expectedKey = process.env.JWT_SECRET;
+  const expectedKey = process.env.INTERNAL_API_KEY || process.env.JWT_SECRET;
 
-  if (expectedKey && apiKey === expectedKey) {
+  if (expectedKey && apiKey && apiKey.length === expectedKey.length &&
+      timingSafeEqual(Buffer.from(apiKey), Buffer.from(expectedKey))) {
+    req.user = { id: 'internal', email: 'internal@system', role: 'admin' };
     return next();
   }
 

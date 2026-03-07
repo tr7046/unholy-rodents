@@ -3,10 +3,17 @@ import { prisma } from '../db';
 
 const router = Router();
 
+// Keys that must never be served via the public content endpoint
+const PRIVATE_KEYS = new Set(['orders', 'payment_config']);
+
 // GET /api/v1/content/:key - Get public content by key
 router.get('/:key', async (req: Request<{ key: string }>, res: Response) => {
   try {
     const key = req.params.key;
+
+    if (PRIVATE_KEYS.has(key)) {
+      return res.status(404).json({ error: 'Content not found' });
+    }
 
     const content = await prisma.siteContent.findUnique({
       where: { key },

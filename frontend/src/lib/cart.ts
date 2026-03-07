@@ -61,7 +61,7 @@ export const useCart = create<CartState>()(
             return {
               items: state.items.map(item =>
                 item.variantId === variant.id
-                  ? { ...item, quantity: Math.min(item.quantity + quantity, variant.stock) }
+                  ? { ...item, quantity: Math.min(item.quantity + quantity, variant.stock), maxStock: variant.stock }
                   : item
               ),
             };

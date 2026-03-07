@@ -8,6 +8,7 @@ import {
   ClockIcon,
   CheckCircleIcon,
   XCircleIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import { PageHeader } from '../components/QuickNav';
 
@@ -59,6 +60,47 @@ const statusConfig = {
   cancelled: { label: 'Cancelled', color: 'bg-red-500/20 text-red-500', icon: XCircleIcon },
 };
 
+function TrackingInput({
+  orderId,
+  status,
+  initialValue,
+  onSave,
+}: {
+  orderId: string;
+  status: Order['status'];
+  initialValue: string;
+  onSave: (id: string, status: Order['status'], trackingNumber: string) => void;
+}) {
+  const [value, setValue] = useState(initialValue);
+
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  return (
+    <div className="mt-3">
+      <label className="block text-sm text-[#888888] mb-1">Tracking Number</label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={() => {
+          if (value !== initialValue) {
+            onSave(orderId, status, value);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            (e.target as HTMLInputElement).blur();
+          }
+        }}
+        placeholder="Enter tracking number"
+        className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-[#f5f5f0] focus:outline-none focus:border-[#c41e3a]"
+      />
+    </div>
+  );
+}
+
 export default function OrdersAdminPage() {
   const [data, setData] = useState<OrdersData | null>(null);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -80,6 +122,12 @@ export default function OrdersAdminPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status, trackingNumber }),
     });
+    await fetchData();
+  }
+
+  async function deleteOrder(id: string) {
+    if (!confirm('Delete this order? This cannot be undone.')) return;
+    await fetch(`/api/admin/orders?id=${id}`, { method: 'DELETE' });
     await fetchData();
   }
 
@@ -233,7 +281,7 @@ export default function OrdersAdminPage() {
                         <select
                           value={order.status}
                           onChange={(e) =>
-                            updateOrderStatus(order.id, e.target.value as Order['status'])
+                            updateOrderStatus(order.id, e.target.value as Order['status'], order.trackingNumber)
                           }
                           className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-[#f5f5f0] focus:outline-none focus:border-[#c41e3a]"
                         >
@@ -245,21 +293,21 @@ export default function OrdersAdminPage() {
                         </select>
 
                         {(order.status === 'shipped' || order.status === 'delivered') && (
-                          <div className="mt-3">
-                            <label className="block text-sm text-[#888888] mb-1">
-                              Tracking Number
-                            </label>
-                            <input
-                              type="text"
-                              value={order.trackingNumber || ''}
-                              onChange={(e) =>
-                                updateOrderStatus(order.id, order.status, e.target.value)
-                              }
-                              placeholder="Enter tracking number"
-                              className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-[#f5f5f0] focus:outline-none focus:border-[#c41e3a]"
-                            />
-                          </div>
+                          <TrackingInput
+                            orderId={order.id}
+                            status={order.status}
+                            initialValue={order.trackingNumber || ''}
+                            onSave={updateOrderStatus}
+                          />
                         )}
+
+                        <button
+                          onClick={() => deleteOrder(order.id)}
+                          className="mt-4 flex items-center gap-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-lg transition-colors"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                          Delete Order
+                        </button>
                       </div>
                     </div>
                   </div>

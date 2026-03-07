@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Package, Shirt, Sticker, Gift, Music, Plus, Minus, ShoppingCart, X, Truck, AlertCircle } from 'lucide-react';
 import {
@@ -168,7 +168,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
             {product.variants.length > 1 && (
               <div className="mb-4">
                 <label className="block text-sm font-display uppercase tracking-wider text-[#f5f5f0] mb-2">
-                  Size
+                  Options
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {product.variants.map((variant) => (
@@ -267,6 +267,9 @@ function CartSidebar({ isOpen, onClose, shippingRates }: { isOpen: boolean; onCl
   } = useCart();
 
   const [paymentConfigured, setPaymentConfigured] = useState<boolean | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const checkoutInProgress = useRef(false);
 
   useEffect(() => {
     if (isOpen && paymentConfigured === null) {
@@ -276,6 +279,49 @@ function CartSidebar({ isOpen, onClose, shippingRates }: { isOpen: boolean; onCl
         .catch(() => setPaymentConfigured(false));
     }
   }, [isOpen, paymentConfigured]);
+
+  const handleCheckout = async () => {
+    if (checkoutInProgress.current) return;
+    checkoutInProgress.current = true;
+    setCheckoutLoading(true);
+    setCheckoutError(null);
+
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map(item => ({
+            productId: item.productId,
+            variantId: item.variantId,
+            productName: item.productName,
+            variantName: item.variantName,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image,
+          })),
+          shippingMethod,
+          shippingCost: getShipping(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setCheckoutError(data.error || 'Checkout failed');
+        return;
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch {
+      setCheckoutError('Network error — could not reach server');
+    } finally {
+      setCheckoutLoading(false);
+      checkoutInProgress.current = false;
+    }
+  };
 
   const freeShipping = isEligibleForFreeShipping();
 
@@ -319,7 +365,7 @@ function CartSidebar({ isOpen, onClose, shippingRates }: { isOpen: boolean; onCl
                 <div className="space-y-4">
                   {items.map((item) => (
                     <CartItemCard
-                      key={item.variantId}
+                      key={`${item.productId}-${item.variantId}`}
                       item={item}
                       onRemove={() => removeItem(item.variantId)}
                       onUpdateQuantity={(qty) => updateQuantity(item.variantId, qty)}
@@ -407,6 +453,12 @@ function CartSidebar({ isOpen, onClose, shippingRates }: { isOpen: boolean; onCl
                 </div>
 
                 {/* Checkout button */}
+                {checkoutError && (
+                  <div className="bg-[#0a0a0a] border border-[#c41e3a] p-3 text-center">
+                    <AlertCircle className="w-5 h-5 text-[#c41e3a] mx-auto mb-1" />
+                    <p className="text-sm text-[#c41e3a]">{checkoutError}</p>
+                  </div>
+                )}
                 {paymentConfigured === false ? (
                   <div className="bg-[#0a0a0a] border border-[#333] p-3 text-center">
                     <AlertCircle className="w-5 h-5 text-[#888888] mx-auto mb-1" />
@@ -415,14 +467,12 @@ function CartSidebar({ isOpen, onClose, shippingRates }: { isOpen: boolean; onCl
                 ) : (
                   <motion.button
                     className="btn btn-blood w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                    whileHover={paymentConfigured ? { scale: 1.02 } : {}}
-                    whileTap={paymentConfigured ? { scale: 0.98 } : {}}
-                    disabled={!paymentConfigured}
-                    onClick={() => {
-                      // TODO: Implement checkout flow with configured payment provider
-                    }}
+                    whileHover={paymentConfigured && !checkoutLoading ? { scale: 1.02 } : {}}
+                    whileTap={paymentConfigured && !checkoutLoading ? { scale: 0.98 } : {}}
+                    disabled={!paymentConfigured || checkoutLoading}
+                    onClick={handleCheckout}
                   >
-                    {paymentConfigured === null ? 'Loading...' : 'Checkout'}
+                    {paymentConfigured === null ? 'Loading...' : checkoutLoading ? 'Processing...' : 'Checkout'}
                   </motion.button>
                 )}
 
@@ -452,8 +502,12 @@ function CartItemCard({
 }) {
   return (
     <div className="flex gap-4 bg-[#0a0a0a] p-4">
-      <div className="w-20 h-20 bg-[#2a2a2a] flex items-center justify-center flex-shrink-0">
-        <Package className="w-8 h-8 text-[#c41e3a]" />
+      <div className="w-20 h-20 bg-[#2a2a2a] flex items-center justify-center flex-shrink-0 overflow-hidden">
+        {item.image && !item.image.includes('placeholder') ? (
+          <img src={item.image} alt={item.productName} className="w-full h-full object-cover" />
+        ) : (
+          <Package className="w-8 h-8 text-[#c41e3a]" />
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <h4 className="font-display text-[#f5f5f0] text-sm truncate">{item.productName}</h4>

@@ -1,3 +1,7 @@
+// DEPRECATED: This file-based data layer is no longer used for products/orders.
+// All store data flows through the backend API -> SiteContent (PostgreSQL).
+// Kept for reference only. Do not use for new features.
+
 import { promises as fs } from 'fs';
 import path from 'path';
 

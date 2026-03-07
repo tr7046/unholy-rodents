@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { ProductSchema, validateRequest } from '@/lib/schemas';
 import { z } from 'zod';
+import { randomUUID } from 'crypto';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 const CONTENT_KEY = 'products';
@@ -25,10 +26,6 @@ const defaultData: ProductsData = {
     freeShippingThreshold: 7500,
   },
 };
-
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-}
 
 // Disable caching for dynamic data
 export const dynamic = 'force-dynamic';
@@ -99,15 +96,18 @@ export async function POST(request: NextRequest) {
 
     const newProduct: Product = {
       ...product,
-      id: generateId(),
+      id: randomUUID(),
       variants: product.variants.map((v) => ({
         ...v,
-        id: v.id || generateId(),
+        id: v.id || randomUUID(),
       })),
     };
 
     data.products.push(newProduct);
-    await saveContentToBackend(data);
+    const saved = await saveContentToBackend(data);
+    if (!saved) {
+      return NextResponse.json({ error: 'Failed to save product' }, { status: 500 });
+    }
 
     return NextResponse.json(newProduct, { status: 201 });
   } catch {
@@ -137,7 +137,10 @@ export async function PUT(request: NextRequest) {
     }
 
     data.products[index] = product as Product;
-    await saveContentToBackend(data);
+    const saved = await saveContentToBackend(data);
+    if (!saved) {
+      return NextResponse.json({ error: 'Failed to save product' }, { status: 500 });
+    }
 
     return NextResponse.json(product);
   } catch {
@@ -160,7 +163,10 @@ export async function DELETE(request: NextRequest) {
 
     const data = await getContentFromBackend();
     data.products = data.products.filter((p) => p.id !== id);
-    await saveContentToBackend(data);
+    const saved = await saveContentToBackend(data);
+    if (!saved) {
+      return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true });
   } catch {

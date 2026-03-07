@@ -653,24 +653,30 @@ export default function SettingsPage() {
     setHasChanges(true);
   };
 
-  // Save config
-  const save = async () => {
+  // Save config — returns true on success, false on failure
+  const save = async (): Promise<boolean> => {
     setIsSaving(true);
     try {
       // Mark providers as configured based on required fields
       const toSave = { ...config };
 
-      // Check Stripe
+      // Check Stripe — mark configured if new keys provided, unconfigure if required keys empty
       const s = toSave.stripe;
-      toSave.stripe = { ...s, isConfigured: !!(s.publishableKey && s.secretKey && !s.secretKey.includes('••') ? true : s.isConfigured) };
+      const stripeHasNewKeys = !!(s.publishableKey && s.secretKey && !s.secretKey.includes('••'));
+      const stripeCleared = !s.publishableKey || !s.secretKey;
+      toSave.stripe = { ...s, isConfigured: stripeCleared ? false : (stripeHasNewKeys ? true : s.isConfigured) };
 
       // Check Square
       const sq = toSave.square;
-      toSave.square = { ...sq, isConfigured: !!(sq.applicationId && sq.accessToken && sq.locationId && !sq.accessToken.includes('••') ? true : sq.isConfigured) };
+      const squareHasNewKeys = !!(sq.applicationId && sq.accessToken && sq.locationId && !sq.accessToken.includes('••'));
+      const squareCleared = !sq.applicationId || !sq.accessToken || !sq.locationId;
+      toSave.square = { ...sq, isConfigured: squareCleared ? false : (squareHasNewKeys ? true : sq.isConfigured) };
 
       // Check PayPal
       const pp = toSave.paypal;
-      toSave.paypal = { ...pp, isConfigured: !!(pp.clientId && pp.clientSecret && !pp.clientSecret.includes('••') ? true : pp.isConfigured) };
+      const paypalHasNewKeys = !!(pp.clientId && pp.clientSecret && !pp.clientSecret.includes('••'));
+      const paypalCleared = !pp.clientId || !pp.clientSecret;
+      toSave.paypal = { ...pp, isConfigured: paypalCleared ? false : (paypalHasNewKeys ? true : pp.isConfigured) };
 
       const res = await fetch('/api/admin/payment-config', {
         method: 'PUT',
@@ -684,12 +690,14 @@ export default function SettingsPage() {
         setSaveStatus('success');
         setHasChanges(false);
         setTimeout(() => setSaveStatus('idle'), 3000);
+        return true;
       } else {
         throw new Error('Save failed');
       }
     } catch {
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 3000);
+      return false;
     } finally {
       setIsSaving(false);
     }
@@ -701,8 +709,16 @@ export default function SettingsPage() {
     setTestResults((prev) => ({ ...prev, [provider]: null }));
 
     try {
-      // Save first so backend has the latest keys
-      await save();
+      // Save first so backend has the latest keys — bail if save fails
+      const saved = await save();
+      if (!saved) {
+        setTestResults((prev) => ({
+          ...prev,
+          [provider]: { success: false, message: 'Could not save config. Fix errors above and try again.' },
+        }));
+        setTestingProvider(null);
+        return;
+      }
 
       const res = await fetch('/api/admin/payment-config', {
         method: 'POST',

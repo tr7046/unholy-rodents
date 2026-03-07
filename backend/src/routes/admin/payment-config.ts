@@ -102,7 +102,7 @@ function encryptProviderSecrets(provider: string, newConfig: ProviderConfig, exi
   return result;
 }
 
-// GET /api/v1/admin/payment-config - Get payment config (masked secrets)
+// GET /api/v1/admin/payment-config - Get payment config (masked secrets for admin UI)
 router.get('/', async (_req: Request, res: Response) => {
   try {
     const content = await prisma.siteContent.findUnique({
@@ -126,6 +126,37 @@ router.get('/', async (_req: Request, res: Response) => {
     res.json(masked);
   } catch (error) {
     console.error('[payment-config] GET failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch payment config' });
+  }
+});
+
+// GET /api/v1/admin/payment-config/decrypted - Get decrypted config (server-to-server ONLY)
+// This endpoint is used by the checkout route to get the actual secret keys.
+// It is protected by authenticateInternal (X-Internal-API-Key) and should NEVER
+// be exposed to the browser.
+router.get('/decrypted', async (_req: Request, res: Response) => {
+  try {
+    const content = await prisma.siteContent.findUnique({
+      where: { key: CONTENT_KEY },
+    });
+
+    if (!content) {
+      return res.json(defaultConfig);
+    }
+
+    const config = content.value as unknown as PaymentConfig;
+
+    // Decrypt secrets for server-side use
+    const decrypted: PaymentConfig = {
+      activeProvider: config.activeProvider,
+      stripe: decryptProviderSecrets('stripe', config.stripe || defaultConfig.stripe),
+      square: decryptProviderSecrets('square', config.square || defaultConfig.square),
+      paypal: decryptProviderSecrets('paypal', config.paypal || defaultConfig.paypal),
+    };
+
+    res.json(decrypted);
+  } catch (error) {
+    console.error('[payment-config] GET /decrypted failed:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch payment config' });
   }
 });
@@ -177,7 +208,7 @@ router.put('/', async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/v1/admin/payment-config/test - Test connection to a provider
+// POST /api/v1/admin/payment-config/test - Test connection by calling the actual provider API
 router.post('/test', async (req: Request, res: Response) => {
   try {
     const { provider } = req.body as { provider: string };
@@ -186,7 +217,6 @@ router.post('/test', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'Invalid provider' });
     }
 
-    // Get the config and decrypt secrets
     const content = await prisma.siteContent.findUnique({
       where: { key: CONTENT_KEY },
     });
@@ -198,7 +228,6 @@ router.post('/test', async (req: Request, res: Response) => {
     const config = content.value as unknown as PaymentConfig;
     const providerConfig = decryptProviderSecrets(provider, config[provider as keyof PaymentConfig] as ProviderConfig);
 
-    // Basic validation per provider
     let valid = false;
     let message = '';
 
@@ -208,38 +237,105 @@ router.post('/test', async (req: Request, res: Response) => {
         const pk = providerConfig.publishableKey as string;
         if (!sk || !pk) {
           message = 'Missing publishable key or secret key';
-        } else if (providerConfig.mode === 'test' && (!sk.startsWith('sk_test_') || !pk.startsWith('pk_test_'))) {
-          message = 'Test mode keys should start with sk_test_ and pk_test_';
-        } else if (providerConfig.mode === 'live' && (!sk.startsWith('sk_live_') || !pk.startsWith('pk_live_'))) {
-          message = 'Live mode keys should start with sk_live_ and pk_live_';
-        } else {
-          valid = true;
-          message = 'Stripe credentials look valid. Full validation will occur during checkout.';
+          break;
+        }
+
+        // Actually call Stripe API to validate the key
+        try {
+          const stripeRes = await fetch('https://api.stripe.com/v1/balance', {
+            signal: AbortSignal.timeout(15000),
+            headers: { 'Authorization': `Bearer ${sk}` },
+          });
+
+          if (stripeRes.ok) {
+            valid = true;
+            const data = await stripeRes.json();
+            const isLive = data.livemode;
+            message = `Connected to Stripe (${isLive ? 'LIVE' : 'TEST'} mode). Your account is ready to accept payments.`;
+          } else {
+            const err = await stripeRes.json();
+            message = `Stripe rejected the key: ${err.error?.message || 'Invalid API key'}`;
+          }
+        } catch {
+          message = 'Could not reach Stripe API. Check your internet connection.';
         }
         break;
       }
+
       case 'square': {
         const token = providerConfig.accessToken as string;
         const appId = providerConfig.applicationId as string;
         const locId = providerConfig.locationId as string;
         if (!token || !appId) {
           message = 'Missing application ID or access token';
-        } else if (!locId) {
+          break;
+        }
+        if (!locId) {
           message = 'Missing location ID — required for processing payments';
-        } else {
-          valid = true;
-          message = 'Square credentials look valid. Full validation will occur during checkout.';
+          break;
+        }
+
+        // Call Square Locations API to validate
+        try {
+          const isSandbox = providerConfig.mode === 'sandbox';
+          const baseUrl = isSandbox ? 'https://connect.squareupsandbox.com' : 'https://connect.squareup.com';
+          const squareRes = await fetch(`${baseUrl}/v2/locations/${locId}`, {
+            signal: AbortSignal.timeout(15000),
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Square-Version': '2024-01-18',
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (squareRes.ok) {
+            const data = await squareRes.json();
+            valid = true;
+            message = `Connected to Square. Location: ${data.location?.name || locId} (${isSandbox ? 'sandbox' : 'production'})`;
+          } else {
+            const err = await squareRes.json();
+            const errMsg = err.errors?.[0]?.detail || 'Invalid credentials';
+            message = `Square rejected the credentials: ${errMsg}`;
+          }
+        } catch {
+          message = 'Could not reach Square API. Check your internet connection.';
         }
         break;
       }
+
       case 'paypal': {
         const clientId = providerConfig.clientId as string;
         const secret = providerConfig.clientSecret as string;
         if (!clientId || !secret) {
           message = 'Missing client ID or client secret';
-        } else {
-          valid = true;
-          message = 'PayPal credentials look valid. Full validation will occur during checkout.';
+          break;
+        }
+
+        // Call PayPal OAuth to validate credentials
+        try {
+          const isSandbox = providerConfig.mode === 'sandbox';
+          const baseUrl = isSandbox ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
+          const authString = Buffer.from(`${clientId}:${secret}`).toString('base64');
+
+          const ppRes = await fetch(`${baseUrl}/v1/oauth2/token`, {
+            method: 'POST',
+            signal: AbortSignal.timeout(15000),
+            headers: {
+              'Authorization': `Basic ${authString}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'grant_type=client_credentials',
+          });
+
+          if (ppRes.ok) {
+            valid = true;
+            message = `Connected to PayPal (${isSandbox ? 'sandbox' : 'live'}). Your account is ready to accept payments.`;
+          } else {
+            const err = await ppRes.json();
+            message = `PayPal rejected the credentials: ${err.error_description || err.error || 'Invalid credentials'}`;
+          }
+        } catch {
+          message = 'Could not reach PayPal API. Check your internet connection.';
         }
         break;
       }

@@ -113,4 +113,51 @@ router.post('/:key/append', async (req: Request<{ key: string }>, res: Response)
   }
 });
 
+// PATCH /api/v1/admin/content/:key/item - Atomically update a single item in a JSON array by ID
+// Body: { field: "orders", id: "abc123", updates: { status: "shipped" } }
+router.patch('/:key/item', async (req: Request<{ key: string }>, res: Response) => {
+  try {
+    const key = req.params.key;
+    const { field, id, updates } = req.body;
+
+    if (!field || !id || !updates) {
+      return res.status(400).json({ success: false, error: 'field, id, and updates are required' });
+    }
+
+    // Get current content
+    const content = await prisma.siteContent.findUnique({
+      where: { key },
+    });
+
+    if (!content) {
+      return res.status(404).json({ success: false, error: 'Content not found' });
+    }
+
+    const value = content.value as Record<string, unknown>;
+    const items = value[field] as Array<Record<string, unknown>>;
+
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ success: false, error: `Field "${field}" is not an array` });
+    }
+
+    const index = items.findIndex((item) => item.id === id);
+    if (index === -1) {
+      return res.status(404).json({ success: false, error: `Item with id "${id}" not found` });
+    }
+
+    items[index] = { ...items[index], ...updates };
+    value[field] = items;
+
+    await prisma.siteContent.update({
+      where: { key },
+      data: { value: value as object },
+    });
+
+    res.json({ success: true, item: items[index] });
+  } catch (error) {
+    console.error(`[content] PATCH /${req.params.key}/item failed:`, error);
+    res.status(500).json({ success: false, error: 'Failed to update item' });
+  }
+});
+
 export default router;

@@ -43,16 +43,18 @@ function generateTempId(): string {
   return `new-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
 
-const defaultProduct: Omit<Product, 'id'> = {
-  name: '',
-  slug: '',
-  description: '',
-  category: 'apparel',
-  images: [],
-  featured: false,
-  tags: [],
-  variants: [{ id: generateTempId(), name: '', price: 0, stock: 0 }],
-};
+function createDefaultProduct(): Omit<Product, 'id'> {
+  return {
+    name: '',
+    slug: '',
+    description: '',
+    category: 'apparel',
+    images: [],
+    featured: false,
+    tags: [],
+    variants: [{ id: generateTempId(), name: '', price: 0, stock: 0 }],
+  };
+}
 
 export default function ProductsAdminPage() {
   const [data, setData] = useState<ProductsData | null>(null);
@@ -121,7 +123,7 @@ export default function ProductsAdminPage() {
           <button
             onClick={() => {
               setIsCreating(true);
-              setEditingProduct({ id: '', ...defaultProduct } as Product);
+              setEditingProduct({ id: '', ...createDefaultProduct() } as Product);
             }}
             className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
           >
@@ -217,6 +219,33 @@ export default function ProductsAdminPage() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+function PriceInput({ value, onChange }: { value: number; onChange: (cents: number) => void }) {
+  const [display, setDisplay] = useState((value / 100).toFixed(2));
+
+  useEffect(() => {
+    setDisplay((value / 100).toFixed(2));
+  }, [value]);
+
+  return (
+    <div className="flex items-center gap-1">
+      <span className="text-[#888888]">$</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={display}
+        onChange={(e) => setDisplay(e.target.value)}
+        onBlur={() => {
+          const parsed = parseFloat(display);
+          const cents = isNaN(parsed) ? 0 : Math.max(0, Math.round(parsed * 100));
+          onChange(cents);
+          setDisplay((cents / 100).toFixed(2));
+        }}
+        className="w-20 bg-transparent text-[#f5f5f0] focus:outline-none"
+      />
     </div>
   );
 }
@@ -386,7 +415,7 @@ function ProductModal({
             </div>
             <div className="space-y-3">
               {formData.variants.map((variant, index) => (
-                <div key={index} className="flex items-center gap-3 bg-[#0a0a0a] border border-[#333] rounded-lg p-3">
+                <div key={variant.id} className="flex items-center gap-3 bg-[#0a0a0a] border border-[#333] rounded-lg p-3">
                   <input
                     type="text"
                     value={variant.name}
@@ -394,20 +423,15 @@ function ProductModal({
                     placeholder="Size/Variant"
                     className="flex-1 bg-transparent text-[#f5f5f0] focus:outline-none"
                   />
-                  <div className="flex items-center gap-1">
-                    <span className="text-[#888888]">$</span>
-                    <input
-                      type="number"
-                      value={(variant.price / 100).toFixed(2)}
-                      onChange={(e) => updateVariant(index, 'price', Math.round(parseFloat(e.target.value) * 100))}
-                      step="0.01"
-                      className="w-20 bg-transparent text-[#f5f5f0] focus:outline-none"
-                    />
-                  </div>
+                  <PriceInput
+                    value={variant.price}
+                    onChange={(cents) => updateVariant(index, 'price', cents)}
+                  />
                   <input
                     type="number"
+                    min="0"
                     value={variant.stock}
-                    onChange={(e) => updateVariant(index, 'stock', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateVariant(index, 'stock', Math.max(0, parseInt(e.target.value) || 0))}
                     placeholder="Stock"
                     className="w-20 bg-transparent text-[#f5f5f0] focus:outline-none"
                   />

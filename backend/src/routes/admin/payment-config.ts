@@ -249,11 +249,11 @@ router.post('/test', async (req: Request, res: Response) => {
 
           if (stripeRes.ok) {
             valid = true;
-            const data = await stripeRes.json();
+            const data = await stripeRes.json() as { livemode?: boolean };
             const isLive = data.livemode;
             message = `Connected to Stripe (${isLive ? 'LIVE' : 'TEST'} mode). Your account is ready to accept payments.`;
           } else {
-            const err = await stripeRes.json();
+            const err = await stripeRes.json() as { error?: { message?: string } };
             message = `Stripe rejected the key: ${err.error?.message || 'Invalid API key'}`;
           }
         } catch {
@@ -289,11 +289,11 @@ router.post('/test', async (req: Request, res: Response) => {
           });
 
           if (squareRes.ok) {
-            const data = await squareRes.json();
+            const data = await squareRes.json() as { location?: { name?: string } };
             valid = true;
             message = `Connected to Square. Location: ${data.location?.name || locId} (${isSandbox ? 'sandbox' : 'production'})`;
           } else {
-            const err = await squareRes.json();
+            const err = await squareRes.json() as { errors?: { detail?: string }[] };
             const errMsg = err.errors?.[0]?.detail || 'Invalid credentials';
             message = `Square rejected the credentials: ${errMsg}`;
           }
@@ -331,7 +331,7 @@ router.post('/test', async (req: Request, res: Response) => {
             valid = true;
             message = `Connected to PayPal (${isSandbox ? 'sandbox' : 'live'}). Your account is ready to accept payments.`;
           } else {
-            const err = await ppRes.json();
+            const err = await ppRes.json() as { error_description?: string; error?: string };
             message = `PayPal rejected the credentials: ${err.error_description || err.error || 'Invalid credentials'}`;
           }
         } catch {

@@ -53,6 +53,8 @@ export default function ShowsAdminPage() {
     const res = await fetch('/api/admin/shows');
     if (res.ok) {
       setData(await res.json());
+    } else if (res.status === 401) {
+      window.location.href = '/hailsquatan';
     }
   }
 

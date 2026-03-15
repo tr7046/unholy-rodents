@@ -79,6 +79,8 @@ export default function MessagesAdminPage() {
       if (res.ok) {
         const result = await res.json();
         setData(result);
+      } else if (res.status === 401) {
+        window.location.href = '/hailsquatan';
       }
     } catch (error) {
       console.error('Failed to fetch messages:', error);

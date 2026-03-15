@@ -113,6 +113,8 @@ export default function OrdersAdminPage() {
     const res = await fetch('/api/admin/orders');
     if (res.ok) {
       setData(await res.json());
+    } else if (res.status === 401) {
+      window.location.href = '/hailsquatan';
     }
   }
 

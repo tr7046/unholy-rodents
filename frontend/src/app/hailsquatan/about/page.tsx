@@ -47,6 +47,8 @@ export default function AboutAdminPage() {
     const res = await fetch('/api/admin/about');
     if (res.ok) {
       setData(await res.json());
+    } else if (res.status === 401) {
+      window.location.href = '/hailsquatan';
     }
   }
 

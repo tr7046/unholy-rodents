@@ -70,6 +70,8 @@ export default function ProductsAdminPage() {
     const res = await fetch('/api/admin/products');
     if (res.ok) {
       setData(await res.json());
+    } else if (res.status === 401) {
+      window.location.href = '/hailsquatan';
     }
   }
 

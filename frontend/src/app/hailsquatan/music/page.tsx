@@ -78,6 +78,8 @@ export default function MusicAdminPage() {
     const res = await fetch('/api/admin/music');
     if (res.ok) {
       setData(await res.json());
+    } else if (res.status === 401) {
+      window.location.href = '/hailsquatan';
     }
   }
 

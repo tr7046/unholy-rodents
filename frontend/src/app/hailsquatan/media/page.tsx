@@ -41,6 +41,8 @@ export default function MediaAdminPage() {
     const res = await fetch('/api/admin/media');
     if (res.ok) {
       setData(await res.json());
+    } else if (res.status === 401) {
+      window.location.href = '/hailsquatan';
     }
   }
 

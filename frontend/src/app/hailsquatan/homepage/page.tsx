@@ -34,6 +34,8 @@ export default function HomepageAdminPage() {
     const res = await fetch('/api/admin/homepage');
     if (res.ok) {
       setData(await res.json());
+    } else if (res.status === 401) {
+      window.location.href = '/hailsquatan';
     }
   }
 

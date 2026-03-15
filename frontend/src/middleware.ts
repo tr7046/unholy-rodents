@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const SESSION_COOKIE = 'admin_session';
-const VISIBILITY_CACHE_COOKIE = 'visibility_pages';
-const VISIBILITY_CACHE_DURATION = 60 * 1000; // 1 minute cache
 
 // Admin routes that require authentication
 const PROTECTED_ADMIN_ROUTES = [
@@ -19,73 +17,10 @@ const PROTECTED_ADMIN_ROUTES = [
   '/hailsquatan/settings',
 ];
 
-// Public pages that can be disabled via visibility settings
-const VISIBILITY_CONTROLLED_PAGES: Record<string, string> = {
-  '/about': 'about',
-  '/contact': 'contact',
-  '/shows': 'shows',
-  '/music': 'music',
-  '/media': 'media',
-  '/store': 'store',
-};
-
-interface PageVisibility {
-  home: boolean;
-  about: boolean;
-  contact: boolean;
-  shows: boolean;
-  music: boolean;
-  media: boolean;
-  store: boolean;
-  _timestamp?: number;
-}
-
-async function getPageVisibility(request: NextRequest): Promise<PageVisibility | null> {
-  // Try to get from cache cookie first
-  const cachedVisibility = request.cookies.get(VISIBILITY_CACHE_COOKIE);
-  if (cachedVisibility?.value) {
-    try {
-      const parsed = JSON.parse(cachedVisibility.value) as PageVisibility;
-      // Check if cache is still valid (within 1 minute)
-      if (parsed._timestamp && Date.now() - parsed._timestamp < VISIBILITY_CACHE_DURATION) {
-        return parsed;
-      }
-    } catch {
-      // Invalid cache, will refetch
-    }
-  }
-
-  // Fetch visibility directly from backend (not self-fetch, which hangs on Vercel edge)
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-  try {
-    const res = await fetch(`${API_URL}/content/visibility`, {
-      headers: { 'Cache-Control': 'no-cache' },
-      signal: AbortSignal.timeout(3000),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      const config = data?.config || data;
-      if (config?.pages) {
-        return {
-          ...config.pages,
-          _timestamp: Date.now(),
-        };
-      }
-    }
-  } catch {
-    // Backend unreachable — default to all pages visible
-  }
-
-  return null;
-}
-
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ========================================
-  // 1. ADMIN ROUTE PROTECTION
-  // ========================================
+  // Admin route protection
   const isProtectedRoute = PROTECTED_ADMIN_ROUTES.some(route =>
     pathname === route || pathname.startsWith(route + '/')
   );
@@ -108,55 +43,9 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ========================================
-  // 2. VISIBILITY-CONTROLLED PAGE PROTECTION
-  // ========================================
-  const pageKey = VISIBILITY_CONTROLLED_PAGES[pathname];
-
-  if (pageKey) {
-    const visibility = await getPageVisibility(request);
-
-    if (visibility && !visibility[pageKey as keyof PageVisibility]) {
-      // Page is disabled - redirect to home with message
-      const response = NextResponse.redirect(new URL('/', request.url));
-
-      // Update visibility cache cookie
-      response.cookies.set(VISIBILITY_CACHE_COOKIE, JSON.stringify(visibility), {
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 60, // 1 minute
-        path: '/',
-      });
-
-      return response;
-    }
-
-    // Update cache cookie on successful access
-    if (visibility) {
-      const response = NextResponse.next();
-      response.cookies.set(VISIBILITY_CACHE_COOKIE, JSON.stringify(visibility), {
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 60,
-        path: '/',
-      });
-      return response;
-    }
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    // Admin routes
-    '/hailsquatan/:path*',
-    // Public pages that can be disabled
-    '/about',
-    '/contact',
-    '/shows',
-    '/music',
-    '/media',
-    '/store',
-  ],
+  matcher: ['/hailsquatan/:path*'],
 };

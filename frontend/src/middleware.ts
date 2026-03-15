@@ -55,22 +55,26 @@ async function getPageVisibility(request: NextRequest): Promise<PageVisibility |
     }
   }
 
-  // Fetch fresh visibility config
+  // Fetch visibility directly from backend (not self-fetch, which hangs on Vercel edge)
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
   try {
-    const baseUrl = request.nextUrl.origin;
-    const res = await fetch(`${baseUrl}/api/visibility`, {
+    const res = await fetch(`${API_URL}/content/visibility`, {
       headers: { 'Cache-Control': 'no-cache' },
+      signal: AbortSignal.timeout(3000),
     });
 
     if (res.ok) {
-      const config = await res.json();
-      return {
-        ...config.pages,
-        _timestamp: Date.now(),
-      };
+      const data = await res.json();
+      const config = data?.config || data;
+      if (config?.pages) {
+        return {
+          ...config.pages,
+          _timestamp: Date.now(),
+        };
+      }
     }
-  } catch (error) {
-    console.error('Failed to fetch visibility config:', error);
+  } catch {
+    // Backend unreachable — default to all pages visible
   }
 
   return null;

@@ -38,8 +38,19 @@ interface HomepageData {
   };
 }
 
+interface NextShow {
+  id: string;
+  date: string;
+  venue: { name: string; city: string; state: string };
+  doorsTime?: string;
+  ticketUrl?: string;
+  posterUrl?: string;
+  bands?: { name: string; isHeadliner: boolean }[];
+}
+
 export default function HomePage() {
   const [data, setData] = useState<HomepageData | null>(null);
+  const [nextShow, setNextShow] = useState<NextShow | null>(null);
   const socials = useSocialLinks();
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -55,6 +66,14 @@ export default function HomePage() {
     fetch('/api/public/homepage')
       .then(res => res.json())
       .then(setData)
+      .catch(console.error);
+    fetch('/api/public/shows')
+      .then(res => res.json())
+      .then(showsData => {
+        if (showsData?.upcoming?.length > 0) {
+          setNextShow(showsData.upcoming[0]);
+        }
+      })
       .catch(console.error);
   }, []);
 
@@ -212,37 +231,113 @@ export default function HomePage() {
                 <StaggerItem>
                   <div className="flex items-center gap-4 mb-8">
                     <h2 className="text-paper">NEXT SHOW</h2>
-                    <motion.span
-                      className="tag"
-                      animate={{ rotate: [-2, 2, -2] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      Coming Soon
-                    </motion.span>
+                    {nextShow && (
+                      <motion.span
+                        className="tag"
+                        animate={{ rotate: [-2, 2, -2] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        Live
+                      </motion.span>
+                    )}
                   </div>
                 </StaggerItem>
 
                 <StaggerItem>
-                  <HoverCard className="card card-border max-w-2xl">
-                    <div className="flex flex-col md:flex-row gap-6">
-                      <div className="flex-shrink-0">
-                        <Pulse>
-                          <div className="w-24 h-24 bg-blood flex flex-col items-center justify-center">
-                            <span className="text-3xl font-display font-bold text-paper">TBA</span>
-                            <span className="text-sm uppercase tracking-wider text-paper/80">2025</span>
+                  {nextShow ? (() => {
+                    const showDate = /^\d{4}-\d{2}-\d{2}$/.test(nextShow.date)
+                      ? new Date(nextShow.date + 'T12:00:00')
+                      : new Date(nextShow.date);
+                    return (
+                      <HoverCard className="card card-border max-w-2xl">
+                        <div className="flex flex-col md:flex-row gap-6">
+                          <div className="flex-shrink-0">
+                            <Pulse>
+                              <div className="w-24 h-24 bg-blood flex flex-col items-center justify-center">
+                                <span className="text-xs uppercase tracking-wider text-paper/80">
+                                  {showDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
+                                </span>
+                                <span className="text-3xl font-display font-bold text-paper">
+                                  {showDate.getDate()}
+                                </span>
+                                <span className="text-xs text-paper/80">
+                                  {showDate.getFullYear()}
+                                </span>
+                              </div>
+                            </Pulse>
                           </div>
-                        </Pulse>
+                          {nextShow.posterUrl && (
+                            <div className="flex-shrink-0">
+                              <img
+                                src={nextShow.posterUrl}
+                                alt="Show poster"
+                                className="w-24 h-32 object-cover rounded border-2 border-concrete/20"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="text-2xl font-display text-paper mb-1">
+                              {nextShow.venue.name}
+                            </h3>
+                            <p className="text-concrete mb-2">
+                              {nextShow.venue.city}, {nextShow.venue.state}
+                            </p>
+                            {nextShow.doorsTime && (
+                              <p className="text-sm text-concrete mb-3">Doors: {nextShow.doorsTime}</p>
+                            )}
+                            {nextShow.bands && nextShow.bands.length > 0 && (
+                              <p className="text-sm text-concrete mb-4">
+                                w/ {nextShow.bands.filter(b => !b.isHeadliner).map(b => b.name).join(', ')}
+                              </p>
+                            )}
+                            <div className="flex gap-4">
+                              {nextShow.ticketUrl && (
+                                <motion.a
+                                  href={nextShow.ticketUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-blood text-sm"
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  Get Tickets
+                                </motion.a>
+                              )}
+                              <Link href="/shows">
+                                <motion.span
+                                  className="btn btn-outline text-sm"
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  All Shows
+                                </motion.span>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      </HoverCard>
+                    );
+                  })() : (
+                    <HoverCard className="card card-border max-w-2xl">
+                      <div className="flex flex-col md:flex-row gap-6">
+                        <div className="flex-shrink-0">
+                          <Pulse>
+                            <div className="w-24 h-24 bg-blood flex flex-col items-center justify-center">
+                              <span className="text-3xl font-display font-bold text-paper">TBA</span>
+                            </div>
+                          </Pulse>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-2xl font-display text-paper mb-2">
+                            Show dates coming soon
+                          </h3>
+                          <p className="text-concrete mb-4">
+                            Check back soon or follow us on social media for announcements.
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-display text-paper mb-2">
-                          Show dates coming soon
-                        </h3>
-                        <p className="text-concrete mb-4">
-                          Check back soon or follow us on social media for announcements.
-                        </p>
-                      </div>
-                    </div>
-                  </HoverCard>
+                    </HoverCard>
+                  )}
                 </StaggerItem>
               </StaggerContainer>
             </div>

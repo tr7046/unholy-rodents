@@ -100,10 +100,12 @@ function ShowCard({ show, isPast = false }: { show: Show; isPast?: boolean }) {
           </p>
 
           {show.bands && show.bands.length > 0 && (
-            <div className="mb-4">
-              <p className="text-sm text-concrete">
-                w/ {show.bands.filter(b => !b.isHeadliner).map(b => b.name).join(', ')}
-              </p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {show.bands.map((b, i) => (
+                <span key={i} className={`text-sm ${b.isHeadliner ? 'font-bold text-paper' : 'text-concrete'}`}>
+                  {b.name}{i < show.bands!.length - 1 ? ' /' : ''}
+                </span>
+              ))}
             </div>
           )}
 

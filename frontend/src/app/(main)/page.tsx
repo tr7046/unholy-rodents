@@ -286,9 +286,13 @@ export default function HomePage() {
                               <p className="text-sm text-concrete mb-3">Doors: {nextShow.doorsTime}</p>
                             )}
                             {nextShow.bands && nextShow.bands.length > 0 && (
-                              <p className="text-sm text-concrete mb-4">
-                                w/ {nextShow.bands.filter(b => !b.isHeadliner).map(b => b.name).join(', ')}
-                              </p>
+                              <div className="flex flex-wrap gap-2 mb-4">
+                                {nextShow.bands.map((b, i) => (
+                                  <span key={i} className={`text-sm ${b.isHeadliner ? 'font-bold text-paper' : 'text-concrete'}`}>
+                                    {b.name}{i < nextShow.bands!.length - 1 ? ' /' : ''}
+                                  </span>
+                                ))}
+                              </div>
                             )}
                             <div className="flex gap-4">
                               {nextShow.ticketUrl && (

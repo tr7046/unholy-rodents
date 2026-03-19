@@ -58,6 +58,19 @@ export function parseShowsPayload(data: unknown): ShowData[] {
   return [];
 }
 
+/**
+ * Parse a date string for DISPLAY without timezone shift.
+ * "2024-03-15" via new Date() becomes UTC midnight, which is Mar 14 in US timezones.
+ * Appending T12:00:00 keeps it on the correct day in all timezones.
+ */
+export function parseShowDate(dateStr: string): Date {
+  if (!dateStr) return new Date(NaN);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return new Date(dateStr + 'T12:00:00');
+  }
+  return new Date(dateStr);
+}
+
 /** Normalize a date string to YYYY-MM-DD for <input type="date"> */
 export function toDateInputValue(dateStr: string): string {
   if (!dateStr) return '';

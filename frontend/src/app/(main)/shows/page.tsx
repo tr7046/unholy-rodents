@@ -41,7 +41,11 @@ interface ShowsData {
 }
 
 function formatDate(dateStr: string) {
-  const date = new Date(dateStr);
+  // Append T12:00:00 to date-only strings to avoid UTC timezone shift
+  // ("2024-03-15" via new Date() becomes Mar 14 in US timezones)
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
+    ? new Date(dateStr + 'T12:00:00')
+    : new Date(dateStr);
   return {
     month: date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
     day: date.getDate().toString(),

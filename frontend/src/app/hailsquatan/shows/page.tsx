@@ -11,7 +11,7 @@ import {
   PhotoIcon,
 } from '@heroicons/react/24/outline';
 import { PageHeader } from '../components/QuickNav';
-import { toDateInputValue } from '@/lib/shows';
+import { toDateInputValue, parseShowDate } from '@/lib/shows';
 
 interface Show {
   id: string;
@@ -159,13 +159,13 @@ export default function ShowsAdminPage() {
                 <div className="flex items-start gap-6">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-[#c41e3a]">
-                      {new Date(show.date).getDate()}
+                      {parseShowDate(show.date).getDate()}
                     </div>
                     <div className="text-sm text-[#888888] uppercase">
-                      {new Date(show.date).toLocaleDateString('en-US', { month: 'short' })}
+                      {parseShowDate(show.date).toLocaleDateString('en-US', { month: 'short' })}
                     </div>
                     <div className="text-sm text-[#888888]">
-                      {new Date(show.date).getFullYear()}
+                      {parseShowDate(show.date).getFullYear()}
                     </div>
                   </div>
                   {show.posterUrl && (

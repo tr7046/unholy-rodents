@@ -8,8 +8,10 @@ import {
   XMarkIcon,
   CalendarIcon,
   MapPinIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline';
 import { PageHeader } from '../components/QuickNav';
+import { toDateInputValue } from '@/lib/shows';
 
 interface Show {
   id: string;
@@ -21,6 +23,7 @@ interface Show {
   };
   doorsTime?: string;
   ticketUrl?: string | null;
+  posterUrl?: string | null;
   bands?: { name: string; isHeadliner: boolean }[];
 }
 
@@ -33,14 +36,14 @@ const defaultShow: Omit<Show, 'id'> = {
   date: '',
   venue: { name: '', city: '', state: '' },
   doorsTime: '',
-  ticketUrl: '',
+  ticketUrl: null,
+  posterUrl: null,
   bands: [{ name: 'Unholy Rodents', isHeadliner: true }],
 };
 
 export default function ShowsAdminPage() {
   const [data, setData] = useState<ShowsData | null>(null);
   const [editingShow, setEditingShow] = useState<Show | null>(null);
-  const [editingType, setEditingType] = useState<'upcoming' | 'past'>('upcoming');
   const [isCreating, setIsCreating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
@@ -58,30 +61,33 @@ export default function ShowsAdminPage() {
     }
   }
 
-  async function handleSave(show: Partial<Show>, type: 'upcoming' | 'past') {
+  async function handleSave(show: Partial<Show>) {
     setSaving(true);
     try {
       const method = isCreating ? 'POST' : 'PUT';
       const res = await fetch('/api/admin/shows', {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ show, type }),
+        body: JSON.stringify({ show }),
       });
 
       if (res.ok) {
         await fetchData();
         setEditingShow(null);
         setIsCreating(false);
+      } else {
+        const data = await res.json().catch(() => null);
+        alert(data?.error || 'Failed to save show');
       }
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(id: string, type: 'upcoming' | 'past') {
+  async function handleDelete(id: string) {
     if (!confirm('Delete this show ya cunt?')) return;
 
-    await fetch(`/api/admin/shows?id=${id}&type=${type}`, { method: 'DELETE' });
+    await fetch(`/api/admin/shows?id=${id}`, { method: 'DELETE' });
     await fetchData();
   }
 
@@ -102,7 +108,6 @@ export default function ShowsAdminPage() {
           <button
             onClick={() => {
               setIsCreating(true);
-              setEditingType(activeTab);
               setEditingShow({ id: '', ...defaultShow } as Show);
             }}
             className="flex items-center gap-2 bg-[#c41e3a] hover:bg-[#a01830] text-white px-4 py-2 rounded-lg transition-colors"
@@ -163,6 +168,13 @@ export default function ShowsAdminPage() {
                       {new Date(show.date).getFullYear()}
                     </div>
                   </div>
+                  {show.posterUrl && (
+                    <img
+                      src={show.posterUrl}
+                      alt="Show poster"
+                      className="w-16 h-20 object-cover rounded border border-[#333]"
+                    />
+                  )}
                   <div>
                     <h3 className="text-lg font-bold text-[#f5f5f0]">{show.venue.name}</h3>
                     <div className="flex items-center gap-2 text-[#888888] mt-1">
@@ -194,16 +206,13 @@ export default function ShowsAdminPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => {
-                      setEditingShow(show);
-                      setEditingType(activeTab);
-                    }}
+                    onClick={() => setEditingShow(show)}
                     className="p-2 text-[#888888] hover:text-[#f5f5f0] hover:bg-[#252525] rounded-lg transition-colors"
                   >
                     <PencilIcon className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={() => handleDelete(show.id, activeTab)}
+                    onClick={() => handleDelete(show.id)}
                     className="p-2 text-[#888888] hover:text-[#c41e3a] hover:bg-[#252525] rounded-lg transition-colors"
                   >
                     <TrashIcon className="w-5 h-5" />
@@ -219,7 +228,6 @@ export default function ShowsAdminPage() {
       {editingShow && (
         <ShowModal
           show={editingShow}
-          type={editingType}
           isCreating={isCreating}
           saving={saving}
           onSave={handleSave}
@@ -235,21 +243,19 @@ export default function ShowsAdminPage() {
 
 function ShowModal({
   show,
-  type,
   isCreating,
   saving,
   onSave,
   onClose,
 }: {
   show: Show;
-  type: 'upcoming' | 'past';
   isCreating: boolean;
   saving: boolean;
-  onSave: (show: Partial<Show>, type: 'upcoming' | 'past') => void;
+  onSave: (show: Partial<Show>) => void;
   onClose: () => void;
 }) {
   const [formData, setFormData] = useState(show);
-  const [showType, setShowType] = useState(type);
+  const [uploading, setUploading] = useState(false);
 
   function updateField(field: string, value: unknown) {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -282,6 +288,36 @@ function ShowModal({
     }));
   }
 
+  async function handlePosterUpload(file: File) {
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File too large. Max 5MB.');
+      return;
+    }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('folder', 'media');
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+      if (res.ok) {
+        const { url } = await res.json();
+        setFormData((prev) => ({ ...prev, posterUrl: url }));
+      } else {
+        const data = await res.json().catch(() => null);
+        alert(data?.error || 'Upload failed');
+      }
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handlePosterUpload(file);
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-[#1a1a1a] border border-[#333] rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -302,7 +338,7 @@ function ShowModal({
               <label className="block text-sm font-medium text-[#f5f5f0] mb-2">Date</label>
               <input
                 type="date"
-                value={formData.date}
+                value={toDateInputValue(formData.date)}
                 onChange={(e) => updateField('date', e.target.value)}
                 className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-3 text-[#f5f5f0] focus:outline-none focus:border-[#c41e3a]"
               />
@@ -362,6 +398,53 @@ function ShowModal({
             />
           </div>
 
+          {/* Poster Upload */}
+          <div>
+            <label className="block text-sm font-medium text-[#f5f5f0] mb-2">Show Poster</label>
+            {formData.posterUrl ? (
+              <div className="relative inline-block">
+                <img
+                  src={formData.posterUrl}
+                  alt="Poster"
+                  className="w-32 h-40 object-cover rounded border border-[#333]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setFormData((prev) => ({ ...prev, posterUrl: null }))}
+                  className="absolute -top-2 -right-2 bg-[#c41e3a] text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-[#a01830]"
+                >
+                  <XMarkIcon className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div
+                onDrop={handleDrop}
+                onDragOver={(e) => e.preventDefault()}
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) handlePosterUpload(file);
+                  };
+                  input.click();
+                }}
+                className="border-2 border-dashed border-[#333] rounded-lg p-8 text-center cursor-pointer hover:border-[#c41e3a] transition-colors"
+              >
+                {uploading ? (
+                  <p className="text-[#888888]">Uploading...</p>
+                ) : (
+                  <>
+                    <PhotoIcon className="w-10 h-10 text-[#666] mx-auto mb-2" />
+                    <p className="text-sm text-[#888888]">Drop poster here or click to upload</p>
+                    <p className="text-xs text-[#666] mt-1">JPG, PNG, GIF, WebP - Max 5MB</p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Bands */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -400,18 +483,6 @@ function ShowModal({
             </div>
           </div>
 
-          {/* Show Type */}
-          <div>
-            <label className="block text-sm font-medium text-[#f5f5f0] mb-2">Show Type</label>
-            <select
-              value={showType}
-              onChange={(e) => setShowType(e.target.value as 'upcoming' | 'past')}
-              className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-3 text-[#f5f5f0] focus:outline-none focus:border-[#c41e3a]"
-            >
-              <option value="upcoming">Upcoming</option>
-              <option value="past">Past</option>
-            </select>
-          </div>
         </div>
 
         {/* Footer */}
@@ -423,7 +494,7 @@ function ShowModal({
             Cancel
           </button>
           <button
-            onClick={() => onSave(formData, showType)}
+            onClick={() => onSave(formData)}
             disabled={saving}
             className="px-6 py-2 bg-[#c41e3a] hover:bg-[#a01830] text-white rounded-lg transition-colors disabled:opacity-50"
           >

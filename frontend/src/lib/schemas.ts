@@ -59,6 +59,7 @@ export const ShowSchema = z.object({
   venue: VenueSchema,
   doorsTime: z.string().optional(),
   ticketUrl: z.string().url().nullable().optional(),
+  posterUrl: z.string().url().nullable().optional(),
   bands: z.array(BandSchema).optional(),
 });
 

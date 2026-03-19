@@ -31,6 +31,7 @@ interface Show {
   venue: Venue;
   doorsTime?: string;
   ticketUrl?: string;
+  posterUrl?: string;
   bands?: ShowBand[];
 }
 
@@ -72,6 +73,17 @@ function ShowCard({ show, isPast = false }: { show: Show; isPast?: boolean }) {
             </Pulse>
           )}
         </div>
+
+        {/* Poster */}
+        {show.posterUrl && (
+          <div className="flex-shrink-0">
+            <img
+              src={show.posterUrl}
+              alt={`${show.venue.name} show poster`}
+              className="w-24 h-32 object-cover rounded border-2 border-concrete/20"
+            />
+          </div>
+        )}
 
         {/* Show info */}
         <div className="flex-1">

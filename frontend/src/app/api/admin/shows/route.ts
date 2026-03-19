@@ -1,24 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { ShowSchema, validateRequest } from '@/lib/schemas';
+import { classifyShows, parseShowsPayload, type ShowData } from '@/lib/shows';
 import { z } from 'zod';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 const CONTENT_KEY = 'shows';
-
-type Show = z.infer<typeof ShowSchema> & { id: string };
-
-interface ShowsData {
-  upcomingShows: Show[];
-  pastShows: Show[];
-}
-
-const defaultData: ShowsData = {
-  upcomingShows: [],
-  pastShows: [],
-};
-
-const ShowTypeSchema = z.enum(['upcoming', 'past']);
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -28,23 +15,28 @@ function generateId(): string {
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-async function getContentFromBackend(): Promise<ShowsData> {
+/** Reads flat shows array from backend, migrating legacy split format if needed */
+async function getShowsFromBackend(): Promise<ShowData[]> {
   try {
     const response = await fetch(`${API_URL}/content/${CONTENT_KEY}`, {
       cache: 'no-store',
     });
-    if (!response.ok) return defaultData;
+    if (!response.ok) return [];
     const data = await response.json();
-    return {
-      upcomingShows: Array.isArray(data?.upcomingShows) ? data.upcomingShows : defaultData.upcomingShows,
-      pastShows: Array.isArray(data?.pastShows) ? data.pastShows : defaultData.pastShows,
-    };
+    const shows = parseShowsPayload(data);
+
+    // Auto-migrate legacy format to flat array on first read
+    if (!Array.isArray(data?.shows) && shows.length > 0) {
+      await saveShowsToBackend(shows);
+    }
+
+    return shows;
   } catch {
-    return defaultData;
+    return [];
   }
 }
 
-async function saveContentToBackend(data: ShowsData): Promise<boolean> {
+async function saveShowsToBackend(shows: ShowData[]): Promise<boolean> {
   try {
     const response = await fetch(`${API_URL}/admin/content/${CONTENT_KEY}`, {
       method: 'PUT',
@@ -52,12 +44,20 @@ async function saveContentToBackend(data: ShowsData): Promise<boolean> {
         'Content-Type': 'application/json',
         'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
       },
-      body: JSON.stringify({ value: data }),
+      body: JSON.stringify({ value: { shows } }),
     });
     return response.ok;
   } catch {
     return false;
   }
+}
+
+function sanitizeShowInput(raw: Record<string, unknown>) {
+  const show = { ...raw };
+  if (show.ticketUrl === '') show.ticketUrl = null;
+  if (show.posterUrl === '') show.posterUrl = null;
+  if (show.doorsTime === '') delete show.doorsTime;
+  return show;
 }
 
 export async function GET() {
@@ -66,8 +66,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const data = await getContentFromBackend();
-    return NextResponse.json(data, {
+    const shows = await getShowsFromBackend();
+    const { upcoming, past } = classifyShows(shows);
+    return NextResponse.json({ upcomingShows: upcoming, pastShows: past }, {
       headers: { 'Cache-Control': 'no-store, max-age=0' },
     });
   } catch {
@@ -82,30 +83,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const showValidation = validateRequest(ShowSchema, body.show);
-    const typeValidation = validateRequest(ShowTypeSchema, body.type);
+    const showInput = sanitizeShowInput(body.show);
+    const showValidation = validateRequest(ShowSchema, showInput);
 
     if (!showValidation.success) {
       return NextResponse.json({ error: showValidation.error }, { status: 400 });
     }
-    if (!typeValidation.success) {
-      return NextResponse.json({ error: 'Invalid show type' }, { status: 400 });
-    }
 
-    const data = await getContentFromBackend();
+    const shows = await getShowsFromBackend();
+    const newShow: ShowData = { ...showValidation.data, id: generateId() } as ShowData;
+    shows.push(newShow);
 
-    const newShow: Show = {
-      ...showValidation.data,
-      id: generateId(),
-    };
-
-    if (typeValidation.data === 'upcoming') {
-      data.upcomingShows.push(newShow);
-    } else {
-      data.pastShows.push(newShow);
-    }
-
-    await saveContentToBackend(data);
+    await saveShowsToBackend(shows);
     return NextResponse.json(newShow, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -119,28 +108,23 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const showValidation = validateRequest(ShowSchema.extend({ id: z.string() }), body.show);
-    const typeValidation = validateRequest(ShowTypeSchema, body.type);
+    const showInput = sanitizeShowInput(body.show);
+    const showValidation = validateRequest(ShowSchema.extend({ id: z.string() }), showInput);
 
     if (!showValidation.success) {
       return NextResponse.json({ error: showValidation.error }, { status: 400 });
     }
-    if (!typeValidation.success) {
-      return NextResponse.json({ error: 'Invalid show type' }, { status: 400 });
-    }
 
     const show = showValidation.data;
-    const data = await getContentFromBackend();
-
-    const list = typeValidation.data === 'upcoming' ? data.upcomingShows : data.pastShows;
-    const index = list.findIndex((s) => s.id === show.id);
+    const shows = await getShowsFromBackend();
+    const index = shows.findIndex((s) => s.id === show.id);
 
     if (index === -1) {
       return NextResponse.json({ error: 'Show not found' }, { status: 404 });
     }
 
-    list[index] = show as Show;
-    await saveContentToBackend(data);
+    shows[index] = show as ShowData;
+    await saveShowsToBackend(shows);
 
     return NextResponse.json(show);
   } catch {
@@ -156,21 +140,15 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    const type = searchParams.get('type');
 
-    if (!id || !type) {
-      return NextResponse.json({ error: 'Show ID and type required' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: 'Show ID required' }, { status: 400 });
     }
 
-    const data = await getContentFromBackend();
+    const shows = await getShowsFromBackend();
+    const filtered = shows.filter((s) => s.id !== id);
 
-    if (type === 'upcoming') {
-      data.upcomingShows = data.upcomingShows.filter((s) => s.id !== id);
-    } else {
-      data.pastShows = data.pastShows.filter((s) => s.id !== id);
-    }
-
-    await saveContentToBackend(data);
+    await saveShowsToBackend(filtered);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

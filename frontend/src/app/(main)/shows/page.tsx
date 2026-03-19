@@ -84,7 +84,7 @@ function ShowCard({ show, isPast = false }: { show: Show; isPast?: boolean }) {
             <img
               src={show.posterUrl}
               alt={`${show.venue.name} show poster`}
-              className="w-24 h-32 object-cover rounded border-2 border-concrete/20"
+              className="w-72 h-96 object-cover rounded border-2 border-concrete/20"
             />
           </div>
         )}

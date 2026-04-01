@@ -4,6 +4,10 @@ import { isAuthenticated } from '@/lib/auth';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || process.env.JWT_SECRET || '';
 
+// Disable caching for dynamic data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET - Fetch analytics data for admin dashboard
 export async function GET(request: NextRequest) {
   if (!(await isAuthenticated())) {
@@ -19,6 +23,7 @@ export async function GET(request: NextRequest) {
       headers: {
         'X-Internal-API-Key': INTERNAL_API_KEY,
       },
+      cache: 'no-store',
     });
 
     if (!res.ok) {

@@ -15,6 +15,8 @@ const PROTECTED_ADMIN_ROUTES = [
   '/hailsquatan/orders',
   '/hailsquatan/visibility',
   '/hailsquatan/settings',
+  '/hailsquatan/analytics',
+  '/hailsquatan/messages',
 ];
 
 export function middleware(request: NextRequest) {

@@ -37,6 +37,7 @@ interface Release {
   slug?: string;
   visibility?: 'public' | 'unlisted' | 'private';
   password?: string;
+  youtubeEmbed?: string;
 }
 
 interface MusicData {
@@ -61,6 +62,7 @@ const defaultRelease: Omit<Release, 'id'> = {
   slug: '',
   visibility: 'public',
   password: '',
+  youtubeEmbed: '',
 };
 
 export default function MusicAdminPage() {
@@ -585,6 +587,19 @@ function ReleaseModal({
                 {uploading ? 'Uploading...' : 'Upload Image'}
               </label>
             </div>
+          </div>
+
+          {/* YouTube Embed */}
+          <div>
+            <label className="block text-sm font-medium text-[#f5f5f0] mb-2">YouTube Embed</label>
+            <textarea
+              value={formData.youtubeEmbed || ''}
+              onChange={(e) => updateField('youtubeEmbed', e.target.value)}
+              placeholder='Paste YouTube iframe embed code here (e.g. <iframe ...></iframe>)'
+              rows={3}
+              className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-3 text-[#f5f5f0] text-sm focus:outline-none focus:border-[#c41e3a] font-mono resize-y"
+            />
+            <p className="text-xs text-[#888888] mt-1">Shows at the top of the release page</p>
           </div>
 
           {/* Tracks */}

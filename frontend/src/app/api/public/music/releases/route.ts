@@ -24,6 +24,7 @@ interface Release {
   slug?: string;
   visibility?: 'public' | 'unlisted' | 'private';
   password?: string;
+  youtubeEmbed?: string;
 }
 
 interface MusicData {

@@ -29,6 +29,7 @@ interface Release {
   slug?: string;
   visibility?: string;
   requiresPassword?: boolean;
+  youtubeEmbed?: string;
 }
 
 export default function ReleasePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -213,8 +214,20 @@ export default function ReleasePage({ params }: { params: Promise<{ slug: string
     <div className="relative pt-20">
       <NoiseOverlay />
 
+      {/* YouTube Embed */}
+      {release.youtubeEmbed && (
+        <section className="bg-void pt-28 pb-4">
+          <div className="container mx-auto px-4 flex justify-center">
+            <div
+              className="w-full max-w-2xl aspect-video [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"
+              dangerouslySetInnerHTML={{ __html: release.youtubeEmbed }}
+            />
+          </div>
+        </section>
+      )}
+
       {/* Hero */}
-      <section className="pt-12 pb-8 bg-void relative overflow-hidden">
+      <section className={`${release.youtubeEmbed ? 'pt-8' : 'pt-12'} pb-8 bg-void relative overflow-hidden`}>
         <motion.div
           className="absolute top-0 left-1/4 w-96 h-96 bg-blood/10 rounded-full blur-3xl"
           animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.2, 0.1] }}

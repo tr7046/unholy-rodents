@@ -61,6 +61,7 @@ export default function ProductsAdminPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -77,6 +78,7 @@ export default function ProductsAdminPage() {
 
   async function handleSave(product: Partial<Product>) {
     setSaving(true);
+    setSaveError(null);
     try {
       const method = isCreating ? 'POST' : 'PUT';
       const res = await fetch('/api/admin/products', {
@@ -89,6 +91,9 @@ export default function ProductsAdminPage() {
         await fetchData();
         setEditingProduct(null);
         setIsCreating(false);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setSaveError(data.error || `Save failed (${res.status})`);
       }
     } finally {
       setSaving(false);
@@ -214,10 +219,12 @@ export default function ProductsAdminPage() {
           product={editingProduct}
           isCreating={isCreating}
           saving={saving}
+          saveError={saveError}
           onSave={handleSave}
           onClose={() => {
             setEditingProduct(null);
             setIsCreating(false);
+            setSaveError(null);
           }}
         />
       )}
@@ -256,12 +263,14 @@ function ProductModal({
   product,
   isCreating,
   saving,
+  saveError,
   onSave,
   onClose,
 }: {
   product: Product;
   isCreating: boolean;
   saving: boolean;
+  saveError: string | null;
   onSave: (product: Partial<Product>) => void;
   onClose: () => void;
 }) {
@@ -466,20 +475,27 @@ function ProductModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-4 p-6 border-t border-[#333]">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[#888888] hover:text-[#f5f5f0] transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => onSave(formData)}
-            disabled={saving}
-            className="px-6 py-2 bg-[#c41e3a] hover:bg-[#a01830] text-white rounded-lg transition-colors disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Save'}
-          </button>
+        <div className="p-6 border-t border-[#333]">
+          {saveError && (
+            <div className="mb-4 p-3 bg-[#c41e3a]/10 border border-[#c41e3a]/30 rounded-lg text-[#c41e3a] text-sm">
+              {saveError}
+            </div>
+          )}
+          <div className="flex items-center justify-end gap-4">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-[#888888] hover:text-[#f5f5f0] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => onSave(formData)}
+              disabled={saving}
+              className="px-6 py-2 bg-[#c41e3a] hover:bg-[#a01830] text-white rounded-lg transition-colors disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

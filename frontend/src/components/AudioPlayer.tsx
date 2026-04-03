@@ -43,6 +43,8 @@ let globalState: AudioPlayerState = {
 let globalHowl: Howl | null = null;
 let globalVolume = 0.8;
 let globalMuted = false;
+let globalBuffering = false;
+let isAutoAdvancing = false;
 
 const listeners = new Set<() => void>();
 
@@ -52,27 +54,101 @@ function notify() {
 
 // Extract audio format from URL so Howler can detect codec support
 function getAudioFormat(url: string): string | undefined {
-  // Check for file extension in URL (before query params)
   const match = url.match(/\.(mp3|mp4|m4a|aac|wav|ogg|webm|flac|opus)(?:[?#]|$)/i);
   return match ? match[1].toLowerCase() : undefined;
+}
+
+// Transcode lossless Cloudinary URLs to MP3 for streaming (WAV/FLAC are huge)
+function getStreamingUrl(url: string): string {
+  if (url.includes('res.cloudinary.com') && /\.(wav|flac|aiff?)(?:[?#]|$)/i.test(url)) {
+    return url.replace(/\.(wav|flac|aiff?)(?=[?#]|$)/i, '.mp3');
+  }
+  return url;
+}
+
+// Update Media Session metadata for lock screen / notification controls
+function updateMediaSession(track: PlayerTrack) {
+  if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: track.title,
+    artist: 'Unholy Rodents',
+    album: track.releaseTitle,
+    ...(track.coverArt ? { artwork: [{ src: track.coverArt, sizes: '512x512', type: 'image/jpeg' }] } : {}),
+  });
+  navigator.mediaSession.setActionHandler('play', () => globalHowl?.play());
+  navigator.mediaSession.setActionHandler('pause', () => globalHowl?.pause());
+  navigator.mediaSession.setActionHandler('previoustrack', () => {
+    if (globalState.currentIndex > 0) {
+      const idx = globalState.currentIndex - 1;
+      const t = globalState.tracks[idx];
+      globalState = { ...globalState, currentIndex: idx, isPlaying: true };
+      loadAndPlay(t.audioUrl);
+      notify();
+    }
+  });
+  navigator.mediaSession.setActionHandler('nexttrack', () => {
+    if (globalState.currentIndex < globalState.tracks.length - 1) {
+      const idx = globalState.currentIndex + 1;
+      const t = globalState.tracks[idx];
+      globalState = { ...globalState, currentIndex: idx, isPlaying: true };
+      loadAndPlay(t.audioUrl);
+      notify();
+    }
+  });
+}
+
+// Get the underlying HTML5 audio element from a Howl instance
+function getAudioNode(howl: Howl): HTMLAudioElement | null {
+  return (howl as unknown as { _sounds: { _node: HTMLAudioElement }[] })._sounds?.[0]?._node ?? null;
 }
 
 // Core: create Howl and play. MUST be called synchronously from user gesture
 // handlers so Safari allows the play() call.
 function loadAndPlay(url: string) {
+  const streamUrl = getStreamingUrl(url);
+  const fmt = getAudioFormat(streamUrl);
+
+  // On auto-advance (backgrounded tab), reuse the existing audio element
+  // to avoid mobile browser blocking play() on a new element without gesture
+  if (isAutoAdvancing && globalHowl) {
+    const node = getAudioNode(globalHowl);
+    if (node) {
+      // Swap source on existing audio element — keeps the media session alive
+      node.src = streamUrl;
+      node.load();
+      const playPromise = node.play();
+      if (playPromise) {
+        playPromise.catch(() => {
+          // If play is blocked, retry when user returns to tab
+          const onVisible = () => {
+            if (!document.hidden) {
+              node.play().catch(() => {});
+              document.removeEventListener('visibilitychange', onVisible);
+            }
+          };
+          document.addEventListener('visibilitychange', onVisible);
+        });
+      }
+      isAutoAdvancing = false;
+      const currentTrack = globalState.tracks[globalState.currentIndex];
+      if (currentTrack) updateMediaSession(currentTrack);
+      return;
+    }
+  }
+
   if (globalHowl) {
     globalHowl.unload();
   }
 
-  const fmt = getAudioFormat(url);
-
   globalHowl = new Howl({
-    src: [url],
+    src: [streamUrl],
     html5: true,
+    preload: true,
     volume: globalMuted ? 0 : globalVolume,
     ...(fmt ? { format: [fmt] } : {}),
     onplay: () => {
       globalState = { ...globalState, isPlaying: true };
+      globalBuffering = false;
       notify();
     },
     onpause: () => {
@@ -80,11 +156,12 @@ function loadAndPlay(url: string) {
       notify();
     },
     onend: () => {
-      // Auto-advance to next track (audio context is already unlocked)
+      // Auto-advance to next track
       if (globalState.currentIndex < globalState.tracks.length - 1) {
         const nextIdx = globalState.currentIndex + 1;
         const nextTrack = globalState.tracks[nextIdx];
         globalState = { ...globalState, currentIndex: nextIdx, isPlaying: true };
+        isAutoAdvancing = true;
         loadAndPlay(nextTrack.audioUrl);
         trackPlay({
           trackId: nextTrack.trackId || nextTrack.audioUrl,
@@ -99,7 +176,11 @@ function loadAndPlay(url: string) {
       }
     },
     onload: () => {
-      // Trigger re-render so component picks up duration
+      globalBuffering = false;
+      notify();
+    },
+    onseek: () => {
+      globalBuffering = true;
       notify();
     },
     onloaderror: (_id: number, err: unknown) => {
@@ -118,6 +199,17 @@ function loadAndPlay(url: string) {
   });
 
   globalHowl.play();
+
+  // Hook into HTML5 audio element for buffering detection
+  const sound = getAudioNode(globalHowl);
+  if (sound) {
+    sound.addEventListener('waiting', () => { globalBuffering = true; notify(); });
+    sound.addEventListener('playing', () => { globalBuffering = false; notify(); });
+  }
+
+  // Set up lock screen / media session controls
+  const currentTrack = globalState.tracks[globalState.currentIndex];
+  if (currentTrack) updateMediaSession(currentTrack);
 }
 
 // ─── Public API (called from music pages — synchronous with user click) ───
@@ -197,6 +289,7 @@ export default function AudioPlayer() {
   const [muted, setMuted] = useState(globalMuted);
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [buffering, setBuffering] = useState(false);
   const rafRef = useRef<number>(0);
   const seekBarRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
@@ -204,11 +297,15 @@ export default function AudioPlayer() {
 
   const currentTrack = state.tracks[state.currentIndex];
 
-  // Progress + duration loop
+  // Progress + duration loop (throttled to ~4 updates/sec for perf)
+  const lastUpdateRef = useRef(0);
   const startProgressLoop = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
+    const THROTTLE_MS = 250;
     const tick = () => {
-      if (globalHowl && !isDraggingRef.current) {
+      const now = performance.now();
+      if (globalHowl && !isDraggingRef.current && now - lastUpdateRef.current > THROTTLE_MS) {
+        lastUpdateRef.current = now;
         const seek = globalHowl.seek();
         if (typeof seek === 'number' && isFinite(seek)) {
           setProgress(seek);
@@ -217,6 +314,7 @@ export default function AudioPlayer() {
         if (dur && isFinite(dur)) {
           setDuration(dur);
         }
+        setBuffering(globalBuffering);
       }
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -315,10 +413,16 @@ export default function AudioPlayer() {
     notify();
   }
 
+  const seekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   function commitSeek(time: number) {
     if (!globalHowl) return;
-    globalHowl.seek(time);
-    setProgress(time);
+    setProgress(time); // Update UI immediately
+    // Debounce the actual seek to avoid stacking range requests on rapid skips
+    if (seekTimeoutRef.current) clearTimeout(seekTimeoutRef.current);
+    seekTimeoutRef.current = setTimeout(() => {
+      globalHowl?.seek(time);
+    }, 80);
   }
 
   function handleSeekMouseDown(e: React.MouseEvent<HTMLDivElement>) {
@@ -355,6 +459,7 @@ export default function AudioPlayer() {
 
   function handleSeekTouchStart(e: React.TouchEvent<HTMLDivElement>) {
     if (!seekBarRef.current || !duration) return;
+    e.preventDefault(); // Prevent scroll interference
     isDraggingRef.current = true;
     setIsSeeking(true);
     const rect = seekBarRef.current.getBoundingClientRect();
@@ -366,6 +471,7 @@ export default function AudioPlayer() {
 
   function handleSeekTouchMove(e: React.TouchEvent<HTMLDivElement>) {
     if (!isDraggingRef.current || !seekBarRef.current || !duration) return;
+    e.preventDefault(); // Prevent scroll interference
     const rect = seekBarRef.current.getBoundingClientRect();
     const pct = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));
     const time = pct * duration;
@@ -441,7 +547,7 @@ export default function AudioPlayer() {
         <div className="absolute -top-3 -bottom-3 left-0 right-0" />
         <div
           className="h-full bg-[#c41e3a] group-hover:bg-[#e63946] transition-colors relative"
-          style={{ width: `${progressPct}%` }}
+          style={{ width: `${progressPct}%`, transition: isDraggingRef.current ? 'none' : 'width 250ms linear' }}
         >
           <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#f5f5f0] rounded-full shadow transition-opacity ${isSeeking ? 'opacity-100 scale-110' : 'opacity-0 group-hover:opacity-100'}`} />
         </div>
@@ -488,7 +594,11 @@ export default function AudioPlayer() {
             onClick={togglePlay}
             className="p-2 w-10 h-10 bg-[#c41e3a] hover:bg-[#e63946] rounded-full flex items-center justify-center transition-colors"
           >
-            {state.isPlaying ? (
+            {buffering ? (
+              <svg className="w-5 h-5 text-white animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeDasharray="32" strokeDashoffset="12" />
+              </svg>
+            ) : state.isPlaying ? (
               <PauseIcon className="w-5 h-5 text-white" />
             ) : (
               <PlayIcon className="w-5 h-5 text-white ml-0.5" />

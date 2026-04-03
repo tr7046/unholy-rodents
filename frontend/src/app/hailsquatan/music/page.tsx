@@ -384,6 +384,17 @@ function ReleaseModal({
     if (expandedLyrics === index) setExpandedLyrics(null);
   }
 
+  function moveTrack(index: number, direction: -1 | 1) {
+    const newIndex = index + direction;
+    setFormData((prev) => {
+      const tracks = [...prev.tracks];
+      [tracks[index], tracks[newIndex]] = [tracks[newIndex], tracks[index]];
+      return { ...prev, tracks };
+    });
+    if (expandedLyrics === index) setExpandedLyrics(newIndex);
+    else if (expandedLyrics === newIndex) setExpandedLyrics(index);
+  }
+
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -616,6 +627,22 @@ function ReleaseModal({
                   {/* Track header row */}
                   <div className="flex items-center gap-3">
                     <span className="text-[#888888] w-6 text-right text-sm">{index + 1}.</span>
+                    <div className="flex flex-col gap-0.5">
+                      <button
+                        onClick={() => moveTrack(index, -1)}
+                        disabled={index === 0}
+                        className="text-[#888888] hover:text-[#f5f5f0] disabled:opacity-20 disabled:cursor-default"
+                      >
+                        <ChevronUpIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => moveTrack(index, 1)}
+                        disabled={index === formData.tracks.length - 1}
+                        className="text-[#888888] hover:text-[#f5f5f0] disabled:opacity-20 disabled:cursor-default"
+                      >
+                        <ChevronDownIcon className="w-4 h-4" />
+                      </button>
+                    </div>
                     <input
                       type="text"
                       value={track.title}

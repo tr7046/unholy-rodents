@@ -203,29 +203,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
     }
 
-    // Decrement stock (best-effort — order is already saved)
-    for (const item of items) {
-      const product = products.find(p => p.id === item.productId);
-      if (product) {
-        const variant = product.variants.find((v: ProductVariant) => v.id === item.variantId);
-        if (variant) {
-          variant.stock = Math.max(0, variant.stock - item.quantity);
-        }
-      }
-    }
-    // Save updated stock
-    try {
-      await fetch(`${API_URL}/admin/content/products`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-API-Key': process.env.INTERNAL_API_KEY || '',
-        },
-        body: JSON.stringify({ value: { products, shippingRates: serverShipping } }),
-      });
-    } catch {
-      console.error('[checkout] Failed to update stock');
-    }
+    // Stock is NOT decremented here — it's decremented after confirmed payment
+    // via webhook handlers (Stripe, Square) or capture endpoint (PayPal).
+    // This prevents "stock leak" from abandoned checkouts.
 
     // --- Route to the correct payment provider ---
     const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
@@ -299,6 +279,7 @@ async function handleStripeCheckout(
     headers: {
       'Authorization': `Bearer ${secretKey}`,
       'Content-Type': 'application/x-www-form-urlencoded',
+      'Idempotency-Key': orderId,
     },
     body: buildStripeBody({
       line_items: lineItems,
@@ -311,6 +292,7 @@ async function handleStripeCheckout(
         shipping_method: shippingMethod,
         shipping_cost: String(shippingCost),
       },
+      client_reference_id: orderId,
     }),
   });
 
@@ -373,7 +355,7 @@ async function handleSquareCheckout(
     signal: AbortSignal.timeout(PAYMENT_API_TIMEOUT),
     headers: {
       'Authorization': `Bearer ${accessToken}`,
-      'Square-Version': '2024-01-18',
+      'Square-Version': '2026-01-22',
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -381,6 +363,7 @@ async function handleSquareCheckout(
       quick_pay: undefined,
       order: {
         location_id: locationId,
+        reference_id: orderId,
         line_items: lineItems,
       },
       checkout_options: {
@@ -462,6 +445,7 @@ async function handlePayPalCheckout(
     body: JSON.stringify({
       intent: 'CAPTURE',
       purchase_units: [{
+        custom_id: orderId,
         amount: {
           currency_code: 'USD',
           value: (total / 100).toFixed(2),

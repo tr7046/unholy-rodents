@@ -283,7 +283,7 @@ router.post('/test', async (req: Request, res: Response) => {
             signal: AbortSignal.timeout(15000),
             headers: {
               'Authorization': `Bearer ${token}`,
-              'Square-Version': '2024-01-18',
+              'Square-Version': '2026-01-22',
               'Content-Type': 'application/json',
             },
           });
